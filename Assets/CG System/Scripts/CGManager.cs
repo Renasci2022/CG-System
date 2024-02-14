@@ -23,10 +23,10 @@ namespace CG
         private CGPlayer _player; // CG 播放器
 
         [Button]
-        public async UniTask Play()
+        public async UniTask Next()
         {
-            _lastState = _state;
             _state = CGState.Playing;
+            _lastState = CGState.None;
             _cancellationTokenSource = new CancellationTokenSource();
             await UniTask.WhenAll(_playMethods.Select(method => method(_cancellationTokenSource.Token)));
 
@@ -51,13 +51,30 @@ namespace CG
         {
             if (_lastState == CGState.Playing)
             {
-                await Play();
+                await Next();
             }
             else if (_lastState == CGState.Waiting)
             {
                 await UniTask.DelayFrame(1);
+                _lastState = _state;
                 _state = CGState.Waiting;
             }
+        }
+
+        [Button]
+        public void Hide()
+        {
+            _lastState = _state;
+            _state = CGState.Hiding;
+            _player.HideTextBlocks();
+        }
+
+        [Button]
+        public void Show()
+        {
+            _state = _lastState;
+            _lastState = CGState.None;
+            _player.ShowTextBlocks();
         }
 
         [Button]

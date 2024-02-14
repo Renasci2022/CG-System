@@ -132,7 +132,7 @@ namespace CG
         /// 隐藏所有旁白
         /// </summary>
         [Button]
-        public void HideNarrations()
+        public void HideTextBlocks()
         {
             // TODO: 还未考虑对话的情况
             _narrations.ForEach(narration => narration.HideBlock());
@@ -142,7 +142,7 @@ namespace CG
         /// 显示所有旁白
         /// </summary> 
         [Button]
-        public void ShowNarrations()
+        public void ShowTextBlocks()
         {
             // TODO: 还未考虑对话的情况
             _narrations.ForEach(narration => narration.ShowBlock());
