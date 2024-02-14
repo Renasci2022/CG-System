@@ -59,6 +59,18 @@ namespace CG
                 _lastState = _state;
                 _state = CGState.Waiting;
             }
+            else
+            {
+                throw new System.Exception("Invalid state");
+            }
+        }
+
+        [Button]
+        public void SetFastForward(bool fastForward)
+        {
+            _player.FastForward = fastForward;
+            Pause();
+            Resume().Forget();
         }
 
         [Button]
@@ -107,7 +119,6 @@ namespace CG
         Playing,
         Waiting,
         Paused,
-        FastForwarding,
         Hiding,
     }
 }

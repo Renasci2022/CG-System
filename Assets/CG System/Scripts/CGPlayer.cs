@@ -22,6 +22,12 @@ namespace CG
         private Scene[] _scenes;    // 场景数组
         private TextBlock[] _narrations;    // 对话数组
 
+        public bool FastForward
+        {
+            get => _fastForward;
+            set => _fastForward = value;
+        }
+
         /// <summary>
         /// 播放场景
         /// </summary>
@@ -97,23 +103,6 @@ namespace CG
             {
                 // TODO: 通知外部场景播放完毕
             }
-        }
-
-        /// <summary>
-        /// 设置快进模式 
-        /// </summary>
-        /// <param name="fastForward">是否快进</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        [Button]
-        public void SetFastForward(bool fastForward, CancellationToken cancellationToken)
-        {
-            if (fastForward == _fastForward)
-            {
-                return;
-            }
-
-            _fastForward = fastForward;
-            // TODO: 根据情况是否取消当前的播放，并以快进模式重新播放
         }
 
         /// <summary>
