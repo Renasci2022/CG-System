@@ -8,6 +8,8 @@ namespace CG
 {
     /// <summary>
     /// CG 播放器 
+    /// 手动调试时请保证方法调用的正确性，例如在播放场景时，不要调用退出场景方法
+    /// CGManager 会自动调用这些方法
     /// </summary>
     public class CGPlayer : MonoBehaviour
     {
@@ -38,7 +40,7 @@ namespace CG
         }
 
         /// <summary>
-        /// 播放下一个文本块
+        /// 继续或开始播放下一个文本块
         /// </summary>
         /// <param name="cancellationToken">取消令牌</param>  
         [Button]
@@ -52,8 +54,16 @@ namespace CG
 
             TextBlock textBlock = _narrations[_currentTextBlockIndex];
             await textBlock.PlayBlock(cancellationToken, _fastForward);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
             _isTyping = true;
             await textBlock.StartTyping(cancellationToken, _fastForward);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
             _isTyping = false;
             _currentTextBlockIndex++;
 
