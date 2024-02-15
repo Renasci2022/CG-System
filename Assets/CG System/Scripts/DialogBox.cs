@@ -129,8 +129,8 @@ namespace CG
             base.Start();
             _color = Color.white;
             _color.a = 0f;
-            Array.ForEach(_imagesToChange, image => image.color = Color.clear);
             _imagesToChange = new Image[] { _dialogBox, _expression, _nameStamp };
+            Array.ForEach(_imagesToChange, image => image.color = Color.clear);
         }
     }
 }
