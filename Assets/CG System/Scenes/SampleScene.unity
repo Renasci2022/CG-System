@@ -1270,7 +1270,7 @@ GameObject:
   - component: {fileID: 1414235805}
   - component: {fileID: 1414235804}
   m_Layer: 0
-  m_Name: DialogManager
+  m_Name: TextManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

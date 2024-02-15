@@ -87,6 +87,10 @@ crashlytics-build.properties
 /[Aa]ssets/*/[Aa]rt/
 /[Aa]ssets/*/[Aa]rt.meta
 
+# Text files
+/[Aa]ssets/*/[Tt]exts/
+/[Aa]ssets/*/[Tt]exts.meta
+
 # I don't know what this is
 ProjectSettings/
 Packages/

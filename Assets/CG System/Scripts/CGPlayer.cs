@@ -2,6 +2,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Sirenix.OdinInspector;
 using Sirenix.Utilities;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace CG
@@ -13,20 +14,23 @@ namespace CG
     /// </summary>
     public class CGPlayer : MonoBehaviour
     {
+        public bool FastForward
+        {
+            get => _fastForward;
+            set => _fastForward = value;
+        }
+
         private bool _fastForward = false;  // 是否快进
         private bool _isTyping = false; // 是否正在打字
 
         private int _currentSceneIndex = 0; // 当前场景索引
         private int _currentTextBlockIndex = 0; // 当前文本块索引
 
+        private TextManager _textManager;  // 文本管理器
+
         private Scene[] _scenes;    // 场景数组
         private TextBlock[] _narrations;    // 对话数组
-
-        public bool FastForward
-        {
-            get => _fastForward;
-            set => _fastForward = value;
-        }
+        private (int, int) _narrationIndex = (0, 0);    // 当前对话索引
 
         /// <summary>
         /// 播放场景
@@ -52,26 +56,23 @@ namespace CG
         [Button]
         public async UniTask NextTextBlock(CancellationToken cancellationToken)
         {
-            // TODO: 目前只支持 Narration 的播放
             if (_currentTextBlockIndex >= _narrations.Length)
             {
+                Debug.LogError("错误：没有更多文本块，不该调用 NextTextBlock");
                 return;
             }
 
-            TextBlock textBlock = _narrations[_currentTextBlockIndex];
-            await textBlock.PlayBlock(cancellationToken, _fastForward);
-            if (cancellationToken.IsCancellationRequested)
+            (Line line, bool isDialog) = _textManager.GetNextLine();
+            if (isDialog)
             {
-                return;
+                // TODO: SetNextDialog
+                await PlayNextDialog(cancellationToken);
             }
-            _isTyping = true;
-            await textBlock.StartTyping(cancellationToken, _fastForward);
-            if (cancellationToken.IsCancellationRequested)
+            else
             {
-                return;
+                SetNextNarration(line);
+                await PlayNextNarration(cancellationToken);
             }
-            _isTyping = false;
-            _currentTextBlockIndex++;
 
             if (_currentTextBlockIndex > _narrations.Length)
             {
@@ -86,7 +87,10 @@ namespace CG
         [Button]
         public async UniTask ClearNarrations(CancellationToken cancellationToken)
         {
-            await UniTask.WhenAll(_narrations.Select(narration => narration.ExitBlock(cancellationToken)));
+            await UniTask.WhenAll(
+                _narrations[_narrationIndex.Item1.._narrationIndex.Item2].Select(
+                    narration => narration.ExitBlock(cancellationToken)));
+            _narrationIndex = (_currentTextBlockIndex, _currentTextBlockIndex);
         }
 
         /// <summary>
@@ -139,18 +143,46 @@ namespace CG
 
         private void Awake()
         {
-            GameObject canvasObject = GameObject.Find("Canvas");
-            if (canvasObject == null)
+            _scenes = GameObject.Find("Canvas").GetComponentsInChildren<Scene>();
+            _textManager = GameObject.Find("TextManager").GetComponent<TextManager>();
+        }
+
+        private void SetNextNarration(Line line)
+        {
+            TextBlock textBlock = _narrations[_currentTextBlockIndex];
+            textBlock.Text = line.Chinese;
+        }
+
+        private async UniTask PlayNextNarration(CancellationToken cancellationToken)
+        {
+            TextBlock textBlock = _narrations[_currentTextBlockIndex];
+            await textBlock.PlayBlock(cancellationToken, _fastForward);
+            if (cancellationToken.IsCancellationRequested)
             {
-                Debug.LogError("Canvas not found");
                 return;
             }
-            _scenes = canvasObject.GetComponentsInChildren<Scene>();
-            if (_scenes.Length == 0)
+            _isTyping = true;
+
+            await textBlock.StartTyping(cancellationToken, _fastForward);
+            if (cancellationToken.IsCancellationRequested)
             {
-                Debug.LogError("No scene found");
                 return;
             }
+            _isTyping = false;
+            _currentTextBlockIndex++;
+            _narrationIndex.Item2 = _currentTextBlockIndex;
+        }
+
+        private void SetNextDialog(Line line)
+        {
+            // TODO: 设置对话
+        }
+
+        private async UniTask PlayNextDialog(CancellationToken cancellationToken)
+        {
+            // TODO: 播放对话
+            await UniTask.Yield();
+            throw new System.NotImplementedException();
         }
     }
 }
