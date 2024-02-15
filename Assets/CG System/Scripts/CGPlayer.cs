@@ -31,6 +31,8 @@ namespace CG
         private Scene[] _scenes;    // 场景数组
         private TextBlock[] _narrations;    // 对话数组
         private (int, int) _narrationIndex = (0, 0);    // 当前对话索引
+        private (Line line, bool isDialog) _currentLine;    // 当前文本
+        private bool _isLineFinished = true;    // 当前文本是否播放完毕
 
         /// <summary>
         /// 播放场景
@@ -62,15 +64,19 @@ namespace CG
                 return;
             }
 
-            (Line line, bool isDialog) = _textManager.GetNextLine();
-            if (isDialog)
+            if (_isLineFinished)
             {
-                // TODO: SetNextDialog
+                _currentLine = _textManager.GetNextLine();
+                _isLineFinished = false;
+            }
+            if (_currentLine.isDialog)
+            {
+                SetNextDialog(_currentLine.line);
                 await PlayNextDialog(cancellationToken);
             }
             else
             {
-                SetNextNarration(line);
+                SetNextNarration(_currentLine.line);
                 await PlayNextNarration(cancellationToken);
             }
 
@@ -150,7 +156,7 @@ namespace CG
         private void SetNextNarration(Line line)
         {
             TextBlock textBlock = _narrations[_currentTextBlockIndex];
-            textBlock.Text = line.Chinese;
+            textBlock.SetText(line.English);
         }
 
         private async UniTask PlayNextNarration(CancellationToken cancellationToken)
@@ -169,6 +175,7 @@ namespace CG
                 return;
             }
             _isTyping = false;
+            _isLineFinished = true;
             _currentTextBlockIndex++;
             _narrationIndex.Item2 = _currentTextBlockIndex;
         }

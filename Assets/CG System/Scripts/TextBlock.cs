@@ -11,7 +11,6 @@ namespace CG
     /// </summary>
     public abstract class TextBlock : MonoBehaviour
     {
-        public string Text { get; set; }    // 文本内容
         [SerializeField] protected Color _textColor = Color.black; // 文本颜色
 
         [SerializeField] private float _typeSpeed = 10f; // 每秒打印字符数
@@ -55,6 +54,11 @@ namespace CG
             _textMeshPro.maxVisibleCharacters = _textMeshPro.text.Length;
         }
 
+        public void SetText(string text)
+        {
+            _textMeshPro.text = text;
+        }
+
         /// <summary>
         /// 播放文本块
         /// </summary>
@@ -82,12 +86,10 @@ namespace CG
         protected void Awake()
         {
             _textMeshPro = GetComponentInChildren<TextMeshProUGUI>();
-            Text = "test text"; // TODO: 从外部获取文本
         }
 
         protected void Start()
         {
-            _textMeshPro.text = Text;
             _textMeshPro.maxVisibleCharacters = 0;
             _textMeshPro.color = _textColor;
         }
