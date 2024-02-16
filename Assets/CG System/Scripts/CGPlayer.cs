@@ -4,6 +4,7 @@ using Sirenix.OdinInspector;
 using Sirenix.Utilities;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace CG
 {
@@ -89,13 +90,20 @@ namespace CG
         /// </summary>
         /// <param name="cancellationToken">取消令牌</param>
         [Button]
-        public async UniTask ClearNarrations(CancellationToken cancellationToken)
+        public async UniTask ClearTextBlocks(CancellationToken cancellationToken)
         {
-            await UniTask.WhenAll(_narrations.Select(
-                (narration, index) => index >= _displayingNarrationIndexes.Item1 && index <= _displayingNarrationIndexes.Item2
-                    ? narration.ExitBlock(cancellationToken)
-                    : UniTask.CompletedTask));
-            _displayingNarrationIndexes = (_currentNarrationIndex, _currentNarrationIndex);
+            if (_currentLine.isDialog)
+            {
+                await _dialog.ExitBlock(cancellationToken);
+            }
+            else
+            {
+                await UniTask.WhenAll(_narrations.Select(
+                    (narration, index) => index >= _displayingNarrationIndexes.Item1 && index <= _displayingNarrationIndexes.Item2
+                        ? narration.ExitBlock(cancellationToken)
+                        : UniTask.CompletedTask));
+                _displayingNarrationIndexes = (_currentNarrationIndex, _currentNarrationIndex);
+            }
         }
 
         /// <summary>
@@ -105,13 +113,9 @@ namespace CG
         [Button]
         public async UniTask ExitScene(CancellationToken cancellationToken)
         {
-            ClearNarrations(cancellationToken).Forget();
+            ClearTextBlocks(cancellationToken).Forget();
             await _scenes[_currentSceneIndex].Exit(cancellationToken);
             _currentSceneIndex++;
-            if (_currentSceneIndex > _scenes.Length)
-            {
-                // TODO: 通知外部场景播放完毕
-            }
         }
 
         /// <summary>
@@ -120,7 +124,16 @@ namespace CG
         [Button]
         public void SkipTyping()
         {
-            if (_isTyping)
+            if (!_isTyping)
+            {
+                return;
+            }
+
+            if (_currentLine.isDialog)
+            {
+                _dialog.SkipTyping();
+            }
+            else
             {
                 _narrations[_currentNarrationIndex].SkipTyping();
             }
