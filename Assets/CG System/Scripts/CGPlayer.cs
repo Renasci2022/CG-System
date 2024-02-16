@@ -91,11 +91,10 @@ namespace CG
         [Button]
         public async UniTask ClearNarrations(CancellationToken cancellationToken)
         {
-            await UniTask.WhenAll(_narrations.Select(narration => narration.ExitBlock(cancellationToken)));
-            // FIXME: 注释代码有问题，现有代码会推出所有旁白，导致显示问题
-            // await UniTask.WhenAll(
-            //     _narrations[_displayingNarrationIndexes.Item1.._displayingNarrationIndexes.Item2].Select(
-            //         narration => narration.ExitBlock(cancellationToken)));
+            await UniTask.WhenAll(_narrations.Select(
+                (narration, index) => index >= _displayingNarrationIndexes.Item1 && index <= _displayingNarrationIndexes.Item2
+                    ? narration.ExitBlock(cancellationToken)
+                    : UniTask.CompletedTask));
             _displayingNarrationIndexes = (_currentNarrationIndex, _currentNarrationIndex);
         }
 
@@ -133,8 +132,8 @@ namespace CG
         [Button]
         public void HideTextBlocks()
         {
-            // TODO: 还未考虑对话的情况
             _narrations.ForEach(narration => narration.HideBlock());
+            _dialog.HideBlock();
         }
 
         /// <summary>
@@ -143,8 +142,8 @@ namespace CG
         [Button]
         public void ShowTextBlocks()
         {
-            // TODO: 还未考虑对话的情况
             _narrations.ForEach(narration => narration.ShowBlock());
+            _dialog.ShowBlock();
         }
 
         private void Awake()
