@@ -91,6 +91,10 @@ crashlytics-build.properties
 /[Aa]ssets/*/[Tt]exts/
 /[Aa]ssets/*/[Tt]exts.meta
 
+# Addressables
+/[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/
+/[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata.meta
+
 # I don't know what this is
 ProjectSettings/
 Packages/

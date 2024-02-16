@@ -1,7 +1,9 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using UnityEngine.UI;
 
 namespace CG
@@ -10,6 +12,15 @@ namespace CG
     {
         [SerializeField] private float _duration = 1f; // 渐变时长
         [SerializeField] private float _fastForwardDuration = 0.1f; // 快进时渐变时长
+
+        [SerializeField] private AssetReference _expressionReference;   // 表情资源
+        [SerializeField] private AssetReference _nameStampReference;    // 名章资源
+        [SerializeField] private Sprite[] _dialogBoxes; // 对话框数组
+
+        private enum DialogBoxType
+        {
+            普通对话框,
+        }
 
         private Image _dialogBox;   // 对话框
         private Image _expression;  // 表情
@@ -31,12 +42,15 @@ namespace CG
             }
         }
 
-        public void SetDialog(Image dialogBox, Image expression, Image nameStamp, string text)
+        public void SetImages(Line line)
         {
-            _dialogBox = dialogBox;
-            _expression = expression;
-            _nameStamp = nameStamp;
-            _textMeshPro.text = text;
+            _dialogBox.sprite = _dialogBoxes[(int)Enum.Parse(typeof(DialogBoxType), line.DialogBox)];
+            // ! AssetReference 中不能包含中文
+            // string imageReference = $"{_expressionReference}/{line.Character}/{line.Character}-{line.Expression}.png";
+            string imageReference = $"Assets/CG System/Art/角色表情图/{line.Character}/{line.Character}-{line.Expression}.png";
+            Addressables.LoadAssetAsync<Sprite>(imageReference).Completed += handle => _expression.sprite = handle.Result;
+            imageReference = $"Assets/CG System/Art/名字/名字-{line.Character}.png";
+            Addressables.LoadAssetAsync<Sprite>(imageReference).Completed += handle => _nameStamp.sprite = handle.Result;
         }
 
         public override async UniTask PlayBlock(CancellationToken cancellationToken, bool fastForward = false)

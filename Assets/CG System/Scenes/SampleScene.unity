@@ -1259,6 +1259,18 @@ MonoBehaviour:
   _fastForwardTypeSpeed: 50
   _duration: 1
   _fastForwardDuration: 0.1
+  _expressionReference:
+    m_AssetGUID: de0355e92668e8741bb2227043fb4c04
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
+  _nameStampReference:
+    m_AssetGUID: a620703768556bc4b80d567107bde5a4
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
+  _dialogBoxes:
+  - {fileID: 21300000, guid: f0d2a9a941025c143a572f9f64ef4be7, type: 3}
 --- !u!1 &1414235803
 GameObject:
   m_ObjectHideFlags: 0
