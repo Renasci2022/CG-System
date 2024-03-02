@@ -1,15 +1,18 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
-public interface IPlayable
+namespace CG
 {
-    public UniTask Play(bool fastForward, CancellationToken cancellationToken);
+    public interface IPlayable
+    {
+        public UniTask Play(bool fastForward, CancellationToken cancellationToken);
 
-    public UniTask Exit(bool fastForward, CancellationToken cancellationToken);
+        public UniTask Exit(bool fastForward, CancellationToken cancellationToken);
 
-    public void Skip();
+        public void Skip();
 
-    public void Hide();
+        public void Hide();
 
-    public void Show();
+        public void Show();
+    }
 }
