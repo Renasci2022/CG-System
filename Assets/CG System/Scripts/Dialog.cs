@@ -9,8 +9,8 @@ namespace CG
 {
     public class Dialog : TextBlock
     {
-        [SerializeField] private float _duration = 1f; // 渐变时长
-        [SerializeField] private float _fastForwardDuration = 0.1f; // 快进时渐变时长
+        [SerializeField] private float _displaySpeed = 1f;  // 渐变速度
+        [SerializeField] private float _fastForwardDisplaySpeed = 10f; // 快进时渐变速度
 
         [SerializeField] private AssetReference _expressionReference;   // 表情资源
         [SerializeField] private AssetReference _nameStampReference;    // 名章资源
@@ -27,7 +27,6 @@ namespace CG
         private Image[] _imagesToChange;   // 需要改变的图片
         private Color _color;   // 没有隐藏时的颜色
         private bool _isHiding = false; // 是否隐藏中
-        private float _timer = 0f;  // 计时器
 
         public void SetImagesToChange(bool needChangeDialogBox)
         {
@@ -41,7 +40,7 @@ namespace CG
             }
         }
 
-        public void SetImages(Line line)
+        public void SetImages(XMLLine line)
         {
             _dialogBox.sprite = _dialogBoxes[(int)Enum.Parse(typeof(DialogBoxType), line.Type)];
             // ! AssetReference 中不能包含中文
@@ -52,70 +51,66 @@ namespace CG
             Addressables.LoadAssetAsync<Sprite>(imageReference).Completed += handle => _nameStamp.sprite = handle.Result;
         }
 
-        public override async UniTask Play(bool fastForward, CancellationToken token)
+        public override async UniTask Play(CancellationToken token)
         {
-            float duration = fastForward ? _fastForwardDuration : _duration;
-
             while (true)
             {
                 if (token.IsCancellationRequested)
                 {
                     break;
                 }
-                if (CGPlayer.Instance.IsPaused)
+                if (CGPlayer.Instance.Paused)
                 {
                     await UniTask.DelayFrame(1, cancellationToken: token);
                     continue;
                 }
-                if (_timer > duration)
+                if (_color.a >= 1f)
                 {
+                    _color.a = 1f;
                     Array.ForEach(_imagesToChange, image => image.color = _isHiding ? Color.clear : _color);
                     _textMeshPro.color = _textColor;
-                    await StartTyping(fastForward, token);
+                    await StartTyping(token);
                     if (token.IsCancellationRequested)
                     {
                         break;
                     }
-                    _timer = 0f;
                     break;
                 }
-                _color.a = Mathf.Lerp(0f, 1f, _timer / duration);
+                float speed = CGPlayer.Instance.FastForward ? _fastForwardDisplaySpeed : _displaySpeed;
+                _color.a += speed * Time.deltaTime;
                 Array.ForEach(_imagesToChange, image => image.color = _isHiding ? Color.clear : _color);
                 // ? Why is next line not working?
                 // _imagesToChange.ForEach(image => image.color = _isHiding ? Color.clear : _color);
-                _timer += Time.deltaTime;
                 await UniTask.Yield();
             }
         }
 
-        public override async UniTask Exit(bool fastForward, CancellationToken token)
+        public override async UniTask Exit(CancellationToken token)
         {
-            float duration = fastForward ? _fastForwardDuration : _duration;
-
             while (true)
             {
                 if (token.IsCancellationRequested)
                 {
                     break;
                 }
-                if (CGPlayer.Instance.IsPaused)
+                if (CGPlayer.Instance.Paused)
                 {
                     await UniTask.DelayFrame(1, cancellationToken: token);
                     continue;
                 }
-                if (_timer > duration)
+                if (_color.a <= 0f)
                 {
+                    _color.a = 0f;
                     Array.ForEach(_imagesToChange, image => image.color = Color.clear);
                     _textMeshPro.color = Color.clear;
-                    _timer = 0f;
                     break;
                 }
-                _color.a = Mathf.Lerp(1f, 0f, _timer / duration);
+                float speed = CGPlayer.Instance.FastForward ? _fastForwardDisplaySpeed : _displaySpeed;
+                _color.a -= speed * Time.deltaTime;
                 Array.ForEach(_imagesToChange, image => image.color = _color);
                 Color color = _textMeshPro.color;
                 color.a = _color.a;
                 _textMeshPro.color = color;
-                _timer += Time.deltaTime;
                 await UniTask.Yield();
             }
         }

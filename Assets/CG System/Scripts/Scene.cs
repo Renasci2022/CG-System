@@ -7,12 +7,12 @@ namespace CG
 {
     public class Scene : MonoBehaviour, IPlayable
     {
-        [SerializeField] private float _duration = 1f;  // 渐变时长
+        [SerializeField] private float _displaySpeed = 1f;  // 渐变速度
 
         private Image _background;  // 背景图片
-        private float _timer = 0f;  // 计时器
+        private Color _color;   // 没有隐藏时的颜色
 
-        public async UniTask Play(bool fastForward, CancellationToken token)
+        public async UniTask Play(CancellationToken token)
         {
             gameObject.SetActive(true);
             _background.color = Color.clear;
@@ -23,24 +23,24 @@ namespace CG
                 {
                     break;
                 }
-                if (CGPlayer.Instance.IsPaused)
+                if (CGPlayer.Instance.Paused)
                 {
                     await UniTask.DelayFrame(1, cancellationToken: token);
                     continue;
                 }
-                if (_timer > _duration)
+                if (_color.a >= 1f)
                 {
+                    _color.a = 1f;
                     _background.color = Color.white;
-                    _timer = 0f;
                     break;
                 }
-                _background.color = Color.Lerp(Color.clear, Color.white, _timer / _duration);
-                _timer += Time.deltaTime;
+                _color.a += _displaySpeed * Time.deltaTime;
+                _background.color = _color;
                 await UniTask.Yield();
             }
         }
 
-        public async UniTask Exit(bool fastForward, CancellationToken token)
+        public async UniTask Exit(CancellationToken token)
         {
             while (true)
             {
@@ -48,19 +48,19 @@ namespace CG
                 {
                     break;
                 }
-                if (CGPlayer.Instance.IsPaused)
+                if (CGPlayer.Instance.Paused)
                 {
                     await UniTask.DelayFrame(1, cancellationToken: token);
                     continue;
                 }
-                if (_timer > _duration)
+                if (_color.a <= 0f)
                 {
+                    _color.a = 0f;
                     gameObject.SetActive(false);
-                    _timer = 0f;
                     break;
                 }
-                _background.color = Color.Lerp(Color.white, Color.clear, _timer / _duration);
-                _timer += Time.deltaTime;
+                _color.a -= _displaySpeed * Time.deltaTime;
+                _background.color = _color;
                 await UniTask.Yield();
             }
         }
@@ -84,6 +84,9 @@ namespace CG
 
         private void Start()
         {
+            _color = Color.white;
+            _color.a = 0f;
+            _background.color = _color;
             gameObject.SetActive(false);
         }
     }

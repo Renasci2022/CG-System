@@ -9,31 +9,43 @@ namespace CG
 {
     public class CGPlayer : MonoBehaviour
     {
-        public static CGPlayer Instance { get; private set; }
-
-        public bool FastForward { get; set; } = false;    // 是否快进
-        public bool IsPaused { get; private set; } = false;    // 是否暂停
-
-        public delegate UniTask PlayMethod(bool fastForward, CancellationToken token);    // 播放方法委托
+        public delegate UniTask PlayMethod(CancellationToken token);    // 播放方法委托
         public List<PlayMethod> PlayMethods = new();    // 播放方法列表
         public List<TextBlock> TextBlocks = new();  // 文本块列表
 
+        public static CGPlayer Instance { get; private set; }
+        public PlayState PlayState { get; private set; } = PlayState.Stopped;    // 播放状态
+        public bool FastForward { get; private set; } = false;    // 是否快进
+        public bool AutoPlay { get; private set; } = false;    // 是否自动播放
+        public bool Paused { get; private set; } = false;    // 是否暂停
+
+        private PlayState _previousPlayState;   // 上一个播放状态
+
         public async UniTask Play(CancellationToken token)
         {
-            UniTask[] tasks = PlayMethods.Select(method => method(FastForward, token)).ToArray();
+            PlayState = PlayState.Playing;
+            UniTask[] tasks = PlayMethods.Select(method => method(token)).ToArray();
             await UniTask.WhenAll(tasks);
         }
 
-        public async UniTask Pause(CancellationToken token)
+        public void Stop()
         {
-            IsPaused = true;
-            await UniTask.DelayFrame(1, cancellationToken: token);
+            PlayState = PlayState.Stopped;
         }
 
-        public async UniTask Resume(CancellationToken token)
+        public async UniTask Pause()
         {
-            IsPaused = false;
-            await UniTask.DelayFrame(1, cancellationToken: token);
+            _previousPlayState = PlayState;
+            PlayState = PlayState.Paused;
+            Paused = true;
+            await UniTask.DelayFrame(1);
+        }
+
+        public async UniTask Resume()
+        {
+            PlayState = _previousPlayState;
+            Paused = false;
+            await UniTask.DelayFrame(1);
         }
 
         public void Skip()
@@ -43,23 +55,40 @@ namespace CG
 
         public void Hide()
         {
+            _previousPlayState = PlayState;
+            PlayState = PlayState.Hiding;
             TextBlocks.ForEach(textBlock => textBlock.Hide());
         }
 
         public void Show()
         {
+            PlayState = _previousPlayState;
             TextBlocks.ForEach(textBlock => textBlock.Show());
+        }
+
+        public void SetFastForward(bool fastForward)
+        {
+            AutoPlay = fastForward;
+            FastForward = fastForward;
+        }
+
+        public void SetAutoPlay(bool autoPlay)
+        {
+            AutoPlay = autoPlay;
         }
 
         private void Awake()
         {
             Instance = this;
         }
+    }
 
-        private async UniTask ClearTextBlocks(CancellationToken token)
-        {
-            UniTask[] tasks = TextBlocks.Select(TextBlock => TextBlock.Exit(FastForward, token)).ToArray();
-            await UniTask.WhenAll(tasks);
-        }
+    public enum PlayState
+    {
+        Stopped,
+        Playing,
+        Waiting,
+        Paused,
+        Hiding,
     }
 }

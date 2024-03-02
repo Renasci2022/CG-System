@@ -5,9 +5,9 @@ namespace CG
 {
     public interface IPlayable
     {
-        public UniTask Play(bool fastForward, CancellationToken cancellationToken);
+        public UniTask Play(CancellationToken cancellationToken);
 
-        public UniTask Exit(bool fastForward, CancellationToken cancellationToken);
+        public UniTask Exit(CancellationToken cancellationToken);
 
         public void Skip();
 

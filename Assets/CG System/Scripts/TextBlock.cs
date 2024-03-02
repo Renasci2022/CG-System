@@ -21,10 +21,8 @@ namespace CG
             set => _textMeshPro.text = value;
         }
 
-        public async UniTask StartTyping(bool fastForward, CancellationToken token)
+        public async UniTask StartTyping(CancellationToken token)
         {
-            float speed = fastForward ? _fastForwardTypeSpeed : _typeSpeed;
-
             while (true)
             {
                 int length = _textMeshPro.maxVisibleCharacters;
@@ -32,7 +30,7 @@ namespace CG
                 {
                     break;
                 }
-                if (CGPlayer.Instance.IsPaused)  // 暂停
+                if (CGPlayer.Instance.Paused)  // 暂停
                 {
                     await UniTask.DelayFrame(1, cancellationToken: token);
                     continue;
@@ -42,6 +40,7 @@ namespace CG
                     break;
                 }
 
+                float speed = CGPlayer.Instance.FastForward ? _fastForwardTypeSpeed : _typeSpeed;
                 float delay = 1f / speed;
                 _textMeshPro.maxVisibleCharacters = length + 1;
                 await UniTask.Delay(TimeSpan.FromSeconds(delay), cancellationToken: token);
@@ -64,8 +63,8 @@ namespace CG
             _textMeshPro.color = _textColor;
         }
 
-        public abstract UniTask Play(bool fastForward, CancellationToken cancellationToken);
-        public abstract UniTask Exit(bool fastForward, CancellationToken cancellationToken);
+        public abstract UniTask Play(CancellationToken cancellationToken);
+        public abstract UniTask Exit(CancellationToken cancellationToken);
         public abstract void Skip();
         public abstract void Hide();
         public abstract void Show();
