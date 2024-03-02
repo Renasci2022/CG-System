@@ -12,16 +12,21 @@ namespace CG
         private Image _background;  // 背景图片
         private float _timer = 0f;  // 计时器
 
-        public async UniTask Play(bool fastForward, CancellationToken cancellationToken)
+        public async UniTask Play(bool fastForward, CancellationToken token)
         {
             gameObject.SetActive(true);
             _background.color = Color.clear;
 
             while (true)
             {
-                if (cancellationToken.IsCancellationRequested)
+                if (token.IsCancellationRequested)
                 {
                     break;
+                }
+                if (CGPlayer.Instance.IsPaused)
+                {
+                    await UniTask.DelayFrame(1, cancellationToken: token);
+                    continue;
                 }
                 if (_timer > _duration)
                 {
@@ -35,13 +40,18 @@ namespace CG
             }
         }
 
-        public async UniTask Exit(bool fastForward, CancellationToken cancellationToken)
+        public async UniTask Exit(bool fastForward, CancellationToken token)
         {
             while (true)
             {
-                if (cancellationToken.IsCancellationRequested)
+                if (token.IsCancellationRequested)
                 {
                     break;
+                }
+                if (CGPlayer.Instance.IsPaused)
+                {
+                    await UniTask.DelayFrame(1, cancellationToken: token);
+                    continue;
                 }
                 if (_timer > _duration)
                 {

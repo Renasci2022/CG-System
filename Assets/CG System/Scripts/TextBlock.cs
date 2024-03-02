@@ -21,16 +21,21 @@ namespace CG
             set => _textMeshPro.text = value;
         }
 
-        public async UniTask StartTyping(bool fastForward, CancellationToken cancellationToken)
+        public async UniTask StartTyping(bool fastForward, CancellationToken token)
         {
             float speed = fastForward ? _fastForwardTypeSpeed : _typeSpeed;
 
             while (true)
             {
                 int length = _textMeshPro.maxVisibleCharacters;
-                if (cancellationToken.IsCancellationRequested)  // 取消
+                if (token.IsCancellationRequested)  // 取消
                 {
                     break;
+                }
+                if (CGPlayer.Instance.IsPaused)  // 暂停
+                {
+                    await UniTask.DelayFrame(1, cancellationToken: token);
+                    continue;
                 }
                 if (length >= _textMeshPro.text.Length) // 文本播放完毕
                 {
@@ -39,7 +44,7 @@ namespace CG
 
                 float delay = 1f / speed;
                 _textMeshPro.maxVisibleCharacters = length + 1;
-                await UniTask.Delay(TimeSpan.FromSeconds(delay), cancellationToken: cancellationToken);
+                await UniTask.Delay(TimeSpan.FromSeconds(delay), cancellationToken: token);
             }
         }
 

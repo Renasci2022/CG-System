@@ -15,22 +15,27 @@ namespace CG
         private bool _isHiding = false; // 是否隐藏中
         private float _timer = 0f;  // 计时器
 
-        public override async UniTask Play(bool fastForward, CancellationToken cancellationToken)
+        public override async UniTask Play(bool fastForward, CancellationToken token)
         {
             gameObject.SetActive(true);
             float duration = fastForward ? _fastForwardDuration : _duration;
 
             while (true)
             {
-                if (cancellationToken.IsCancellationRequested)
+                if (token.IsCancellationRequested)
                 {
                     break;
+                }
+                if (CGPlayer.Instance.IsPaused)
+                {
+                    await UniTask.DelayFrame(1, cancellationToken: token);
+                    continue;
                 }
                 if (_timer > duration)
                 {
                     _image.color = _isHiding ? Color.clear : _color;
-                    await StartTyping(fastForward, cancellationToken);
-                    if (cancellationToken.IsCancellationRequested)
+                    await StartTyping(fastForward, token);
+                    if (token.IsCancellationRequested)
                     {
                         break;
                     }
@@ -44,15 +49,20 @@ namespace CG
             }
         }
 
-        public override async UniTask Exit(bool fastForward, CancellationToken cancellationToken)
+        public override async UniTask Exit(bool fastForward, CancellationToken token)
         {
             float duration = fastForward ? _fastForwardDuration : _duration;
 
             while (true)
             {
-                if (cancellationToken.IsCancellationRequested)
+                if (token.IsCancellationRequested)
                 {
                     break;
+                }
+                if (CGPlayer.Instance.IsPaused)
+                {
+                    await UniTask.DelayFrame(1, cancellationToken: token);
+                    continue;
                 }
                 if (_timer > duration)
                 {

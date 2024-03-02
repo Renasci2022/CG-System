@@ -52,22 +52,27 @@ namespace CG
             Addressables.LoadAssetAsync<Sprite>(imageReference).Completed += handle => _nameStamp.sprite = handle.Result;
         }
 
-        public override async UniTask Play(bool fastForward, CancellationToken cancellationToken)
+        public override async UniTask Play(bool fastForward, CancellationToken token)
         {
             float duration = fastForward ? _fastForwardDuration : _duration;
 
             while (true)
             {
-                if (cancellationToken.IsCancellationRequested)
+                if (token.IsCancellationRequested)
                 {
                     break;
+                }
+                if (CGPlayer.Instance.IsPaused)
+                {
+                    await UniTask.DelayFrame(1, cancellationToken: token);
+                    continue;
                 }
                 if (_timer > duration)
                 {
                     Array.ForEach(_imagesToChange, image => image.color = _isHiding ? Color.clear : _color);
                     _textMeshPro.color = _textColor;
-                    await StartTyping(fastForward, cancellationToken);
-                    if (cancellationToken.IsCancellationRequested)
+                    await StartTyping(fastForward, token);
+                    if (token.IsCancellationRequested)
                     {
                         break;
                     }
@@ -83,15 +88,20 @@ namespace CG
             }
         }
 
-        public override async UniTask Exit(bool fastForward, CancellationToken cancellationToken)
+        public override async UniTask Exit(bool fastForward, CancellationToken token)
         {
             float duration = fastForward ? _fastForwardDuration : _duration;
 
             while (true)
             {
-                if (cancellationToken.IsCancellationRequested)
+                if (token.IsCancellationRequested)
                 {
                     break;
+                }
+                if (CGPlayer.Instance.IsPaused)
+                {
+                    await UniTask.DelayFrame(1, cancellationToken: token);
+                    continue;
                 }
                 if (_timer > duration)
                 {
