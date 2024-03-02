@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -6,9 +5,6 @@ using UnityEngine.UI;
 
 namespace CG
 {
-    /// <summary>
-    /// 旁白类，控制旁白的显示和隐藏
-    /// </summary>
     public class Narration : TextBlock
     {
         [SerializeField] private float _duration = 1f; // 渐变时长
@@ -19,12 +15,7 @@ namespace CG
         private bool _isHiding = false; // 是否隐藏中
         private float _timer = 0f;  // 计时器
 
-        /// <summary>
-        /// 开始或继续播放旁白
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <param name="fastForward">是否快进播放</param>
-        public override async UniTask PlayBlock(CancellationToken cancellationToken, bool fastForward = true)
+        public override async UniTask Play(bool fastForward, CancellationToken cancellationToken)
         {
             gameObject.SetActive(true);
             float duration = fastForward ? _fastForwardDuration : _duration;
@@ -38,7 +29,7 @@ namespace CG
                 if (_timer > duration)
                 {
                     _image.color = _isHiding ? Color.clear : _color;
-                    await StartTyping(cancellationToken, fastForward);
+                    await StartTyping(fastForward, cancellationToken);
                     if (cancellationToken.IsCancellationRequested)
                     {
                         break;
@@ -53,12 +44,7 @@ namespace CG
             }
         }
 
-        /// <summary>
-        /// 退出旁白
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <param name="fastForward">是否快进播放</param>
-        public override async UniTask ExitBlock(CancellationToken cancellationToken, bool fastForward = false)
+        public override async UniTask Exit(bool fastForward, CancellationToken cancellationToken)
         {
             float duration = fastForward ? _fastForwardDuration : _duration;
 
@@ -70,7 +56,6 @@ namespace CG
                 }
                 if (_timer > duration)
                 {
-                    // TODO: 通知外部旁白播放结束
                     _image.color = Color.clear;
                     _textMeshPro.color = Color.clear;
                     gameObject.SetActive(false);
@@ -81,26 +66,25 @@ namespace CG
                 _image.color = _isHiding ? Color.clear : _color;
                 Color color = _textColor;
                 color.a = _color.a;
-                _textMeshPro.color = color;
+                _textMeshPro.color = _isHiding ? Color.clear : color;
                 _timer += Time.deltaTime;
                 await UniTask.Yield();
             }
         }
 
-        /// <summary>
-        /// 隐藏旁白框及文字，展示背景
-        /// </summary>
-        public override void HideBlock()
+        public override void Skip()
+        {
+            SkipTyping();
+        }
+
+        public override void Hide()
         {
             _isHiding = true;
             _image.color = Color.clear;
             _textMeshPro.color = Color.clear;
         }
 
-        /// <summary>
-        /// 显示旁白框及文字
-        /// </summary>
-        public override void ShowBlock()
+        public override void Show()
         {
             _isHiding = false;
             _image.color = _color;

@@ -1,14 +1,13 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.UI;
 
 namespace CG
 {
-    public class DialogBox : TextBlock
+    public class Dialog : TextBlock
     {
         [SerializeField] private float _duration = 1f; // 渐变时长
         [SerializeField] private float _fastForwardDuration = 0.1f; // 快进时渐变时长
@@ -44,7 +43,7 @@ namespace CG
 
         public void SetImages(Line line)
         {
-            _dialogBox.sprite = _dialogBoxes[(int)Enum.Parse(typeof(DialogBoxType), line.DialogBox)];
+            _dialogBox.sprite = _dialogBoxes[(int)Enum.Parse(typeof(DialogBoxType), line.Type)];
             // ! AssetReference 中不能包含中文
             // string imageReference = $"{_expressionReference}/{line.Character}/{line.Character}-{line.Expression}.png";
             string imageReference = $"Assets/CG System/Art/角色表情图/{line.Character}/{line.Character}-{line.Expression}.png";
@@ -53,7 +52,7 @@ namespace CG
             Addressables.LoadAssetAsync<Sprite>(imageReference).Completed += handle => _nameStamp.sprite = handle.Result;
         }
 
-        public override async UniTask PlayBlock(CancellationToken cancellationToken, bool fastForward = false)
+        public override async UniTask Play(bool fastForward, CancellationToken cancellationToken)
         {
             float duration = fastForward ? _fastForwardDuration : _duration;
 
@@ -67,7 +66,7 @@ namespace CG
                 {
                     Array.ForEach(_imagesToChange, image => image.color = _isHiding ? Color.clear : _color);
                     _textMeshPro.color = _textColor;
-                    await StartTyping(cancellationToken, fastForward);
+                    await StartTyping(fastForward, cancellationToken);
                     if (cancellationToken.IsCancellationRequested)
                     {
                         break;
@@ -84,7 +83,7 @@ namespace CG
             }
         }
 
-        public override async UniTask ExitBlock(CancellationToken cancellationToken, bool fastForward = false)
+        public override async UniTask Exit(bool fastForward, CancellationToken cancellationToken)
         {
             float duration = fastForward ? _fastForwardDuration : _duration;
 
@@ -96,7 +95,6 @@ namespace CG
                 }
                 if (_timer > duration)
                 {
-                    // TODO: 通知外部对话播放结束
                     Array.ForEach(_imagesToChange, image => image.color = Color.clear);
                     _textMeshPro.color = Color.clear;
                     _timer = 0f;
@@ -112,7 +110,12 @@ namespace CG
             }
         }
 
-        public override void HideBlock()
+        public override void Skip()
+        {
+            SkipTyping();
+        }
+
+        public override void Hide()
         {
             _isHiding = true;
             _dialogBox.color = Color.clear;
@@ -121,7 +124,7 @@ namespace CG
             _textMeshPro.color = Color.clear;
         }
 
-        public override void ShowBlock()
+        public override void Show()
         {
             _isHiding = false;
             _dialogBox.color = _color;

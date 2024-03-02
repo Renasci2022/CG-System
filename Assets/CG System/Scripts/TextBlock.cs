@@ -6,37 +6,34 @@ using UnityEngine;
 
 namespace CG
 {
-    /// <summary>
-    /// 文本块基类，控制文本的打印效果
-    /// </summary>
-    public abstract class TextBlock : MonoBehaviour
+    public abstract class TextBlock : MonoBehaviour, IPlayable
     {
         [SerializeField] protected Color _textColor = Color.black; // 文本颜色
 
-        [SerializeField] private float _typeSpeed = 10f; // 每秒打印字符数
-        [SerializeField] private float _fastForwardTypeSpeed = 50f; // 快进时每秒打印字符数
+        [SerializeField] private float _typeSpeed = 10f;  // 每秒打印字符数
+        [SerializeField] private float _fastForwardTypeSpeed = 50f;   // 快进时每秒打印字符数
 
         protected TextMeshProUGUI _textMeshPro;
 
-        /// <summary>
-        /// 开始或继续打印文本
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <param name="fastForward">是否快进打印</param>
-        public async UniTask StartTyping(CancellationToken cancellationToken, bool fastForward = false)
+        public string Text
+        {
+            get => _textMeshPro.text;
+            set => _textMeshPro.text = value;
+        }
+
+        public async UniTask StartTyping(bool fastForward, CancellationToken cancellationToken)
         {
             float speed = fastForward ? _fastForwardTypeSpeed : _typeSpeed;
 
             while (true)
             {
                 int length = _textMeshPro.maxVisibleCharacters;
-                if (cancellationToken.IsCancellationRequested)
+                if (cancellationToken.IsCancellationRequested)  // 取消
                 {
                     break;
                 }
-                if (length >= _textMeshPro.text.Length)
+                if (length >= _textMeshPro.text.Length) // 文本播放完毕
                 {
-                    // TODO: 通知外部文本打印结束
                     break;
                 }
 
@@ -46,42 +43,10 @@ namespace CG
             }
         }
 
-        /// <summary>
-        /// 快进打印文本
-        /// </summary>
         public void SkipTyping()
         {
             _textMeshPro.maxVisibleCharacters = _textMeshPro.text.Length;
         }
-
-        public void SetText(string text)
-        {
-            _textMeshPro.text = text;
-        }
-
-        /// <summary>
-        /// 播放文本块
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <param name="fastForward">是否快进播放</param>
-        public abstract UniTask PlayBlock(CancellationToken cancellationToken, bool fastForward = false);
-
-        /// <summary>
-        /// 退出文本块
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <param name="fastForward">是否快进播放</param>
-        public abstract UniTask ExitBlock(CancellationToken cancellationToken, bool fastForward = false);
-
-        /// <summary>
-        /// 隐藏文本块
-        /// </summary>
-        public abstract void HideBlock();
-
-        /// <summary>
-        /// 展示文本块
-        /// </summary>
-        public abstract void ShowBlock();
 
         protected void Awake()
         {
@@ -93,5 +58,11 @@ namespace CG
             _textMeshPro.maxVisibleCharacters = 0;
             _textMeshPro.color = _textColor;
         }
+
+        public abstract UniTask Play(bool fastForward, CancellationToken cancellationToken);
+        public abstract UniTask Exit(bool fastForward, CancellationToken cancellationToken);
+        public abstract void Skip();
+        public abstract void Hide();
+        public abstract void Show();
     }
 }
