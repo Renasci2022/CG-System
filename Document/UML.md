@@ -42,10 +42,13 @@ classDiagram
 ```mermaid
 stateDiagram-v2
 	state "playing" as s1
+	state "waiting" as s2 : 理解为 playing 的子状态
 	state "paused" as s3
 	state "fast-forward" as s4
 	state "hiding" as s5
 	[*] --> s1
+	s1 --> s2 : 等待输入
+	s2 --> s1 : 继续播放
 	s1 --> s3 : 暂停
 	s3 --> s1
 	s1 --> s4 : 加速（需解锁）
