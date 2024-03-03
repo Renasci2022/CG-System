@@ -80,10 +80,7 @@ namespace CG
         private void Awake()
         {
             _background = GetComponentInChildren<Image>();
-        }
 
-        private void Start()
-        {
             _color = Color.white;
             _color.a = 0f;
             _background.color = _color;
