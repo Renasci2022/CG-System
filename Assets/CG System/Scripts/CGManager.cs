@@ -23,7 +23,6 @@ namespace CG
         public async UniTask NextLine()
         {
             _line = _reader.GetNextLine();
-
             Debug.Log($"Type: {_line.Type}, Text: {_line.Text}");
 
             if (_line == null)
@@ -33,34 +32,19 @@ namespace CG
             }
             else if (_line.Type == LineType.Scene)
             {
-                if (_player.TextBlocks.Count > 0)
-                {
-                    foreach (TextBlock textBlock in _player.TextBlocks)
-                    {
-                        CGPlayer.PlayMethod exitMethod = textBlock.Exit;
-                        _player.PlayMethods.Add(exitMethod);
-                    }
-                    await _player.Play();
-                    _player.TextBlocks.Clear();
-                    _player.PlayMethods.Clear();
-                }
-
                 _narrations = _scenes[_currentSceneIndex].GetComponentsInChildren<Narration>();
                 _currentNarrationIndex = 0;
 
-                CGPlayer.PlayMethod playMethod = _scenes[_currentSceneIndex++].Play;
-                _player.PlayMethods.Add(playMethod);
-                await _player.Play();
-                _player.PlayMethods.Clear();
+                await ClearTextBlocks();
+                await PlayScene(_scenes[_currentSceneIndex]);
+                _currentSceneIndex++;
             }
             else if (_line.Type == LineType.Narration)
             {
                 _narrations[_currentNarrationIndex].Text = _line.Text;
 
-                CGPlayer.PlayMethod playMethod = _narrations[_currentNarrationIndex++].Play;
-                _player.PlayMethods.Add(playMethod);
-                await _player.Play();
-                _player.PlayMethods.Clear();
+                await PlayTextBlock(_narrations[_currentNarrationIndex]);
+                _currentNarrationIndex++;
             }
             else if (_line.Type == LineType.Dialog)
             {
@@ -68,23 +52,15 @@ namespace CG
                 _dialog.SetImages(_line.DialogInfo);
                 _dialog.SetImagesToChange(true);
 
-                CGPlayer.PlayMethod playMethod = _dialog.Play;
-                _player.PlayMethods.Add(playMethod);
-                await _player.Play();
-                _player.PlayMethods.Clear();
+                await ClearTextBlocks();
+                await PlayTextBlock(_dialog);
             }
             else
             {
                 Debug.LogError("Unknown line type");
             }
 
-            // 间隔时间大于等于 0 时，等待一段时间后继续
-            if (_line.Interval >= 0f)
-            {
-                _intervalCts = new();
-                await UniTask.Delay(TimeSpan.FromSeconds(_line.Interval), cancellationToken: _intervalCts.Token);
-                NextLine().Forget();
-            }
+            NextLineAfterInterval(_line.Interval).Forget();
         }
 
         private void Awake()
@@ -99,6 +75,56 @@ namespace CG
         private void Start()
         {
             NextLine().Forget();
+        }
+
+        private async UniTask PlayScene(Scene scene)
+        {
+            CGPlayer.PlayMethod playMethod = scene.Play;
+            _player.PlayMethods.Add(playMethod);
+            await _player.Play();
+            _player.PlayMethods.Clear();
+        }
+
+        private async UniTask PlayTextBlock(TextBlock textBlock)
+        {
+            CGPlayer.PlayMethod playMethod = textBlock.Play;
+            _player.PlayMethods.Add(playMethod);
+            _player.TextBlocks.Add(textBlock);
+            await _player.Play();
+            _player.PlayMethods.Clear();
+        }
+
+        private async UniTask ClearTextBlocks()
+        {
+            if (_player.TextBlocks.Count == 0)
+            {
+                return;
+            }
+
+            foreach (TextBlock textBlock in _player.TextBlocks)
+            {
+                CGPlayer.PlayMethod exitMethod = textBlock.Exit;
+                _player.PlayMethods.Add(exitMethod);
+            }
+            await _player.Play();
+            _player.TextBlocks.Clear();
+            _player.PlayMethods.Clear();
+        }
+
+        private async UniTask NextLineAfterInterval(float interval)
+        {
+            _intervalCts = new();
+            if (interval >= 0f)
+            {
+                await UniTask.Delay(TimeSpan.FromSeconds(interval), cancellationToken: _intervalCts.Token);
+                NextLine().Forget();
+            }
+            else if (_player.AutoPlay)
+            {
+                // TODO: Implement auto play
+                await UniTask.Delay(TimeSpan.FromSeconds(1f), cancellationToken: _intervalCts.Token);
+                NextLine().Forget();
+            }
         }
     }
 }

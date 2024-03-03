@@ -12,7 +12,6 @@ namespace CG
 
         private Image _image;   // 旁白框
         private Color _color;   // 没有隐藏时的颜色
-        private bool _isHiding = false; // 是否隐藏中
 
         public override async UniTask Play(CancellationToken token)
         {
@@ -32,7 +31,7 @@ namespace CG
                 if (_color.a >= 1f)
                 {
                     _color.a = 1f;
-                    _image.color = _isHiding ? Color.clear : _color;
+                    _image.color = CGPlayer.Instance.Hiding ? Color.clear : _color;
                     await StartTyping(token);
                     if (token.IsCancellationRequested)
                     {
@@ -43,7 +42,7 @@ namespace CG
 
                 float speed = CGPlayer.Instance.FastForward ? _fastForwardDisplaySpeed : _displaySpeed;
                 _color.a += speed * Time.deltaTime;
-                _image.color = _isHiding ? Color.clear : _color;
+                _image.color = CGPlayer.Instance.Hiding ? Color.clear : _color;
                 await UniTask.Yield();
             }
         }
@@ -71,10 +70,10 @@ namespace CG
                 }
                 float speed = CGPlayer.Instance.FastForward ? _fastForwardDisplaySpeed : _displaySpeed;
                 _color.a -= speed * Time.deltaTime;
-                _image.color = _isHiding ? Color.clear : _color;
+                _image.color = CGPlayer.Instance.Hiding ? Color.clear : _color;
                 Color color = _textColor;
                 color.a = _color.a;
-                _textMeshPro.color = _isHiding ? Color.clear : color;
+                _textMeshPro.color = CGPlayer.Instance.Hiding ? Color.clear : color;
                 await UniTask.Yield();
             }
         }
@@ -86,14 +85,12 @@ namespace CG
 
         public override void Hide()
         {
-            _isHiding = true;
             _image.color = Color.clear;
             _textMeshPro.color = Color.clear;
         }
 
         public override void Show()
         {
-            _isHiding = false;
             _image.color = _color;
             _textMeshPro.color = _textColor;
         }

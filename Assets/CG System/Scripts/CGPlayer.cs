@@ -14,11 +14,13 @@ namespace CG
         public List<PlayMethod> PlayMethods = new();    // 播放方法列表
         public List<TextBlock> TextBlocks = new();  // 文本块列表
 
+        // TODO: 用事件代替 Instance
         public static CGPlayer Instance { get; private set; }
         public PlayState PlayState { get; private set; } = PlayState.Stopped;    // 播放状态
         public bool FastForward { get; private set; } = false;    // 是否快进
         public bool AutoPlay { get; private set; } = false;    // 是否自动播放
-        public bool Paused { get; private set; } = false;    // 是否暂停
+        public bool Paused => PlayState == PlayState.Paused;    // 是否暂停
+        public bool Hiding => PlayState == PlayState.Hiding;    // 是否隐藏
         public Language Language { get; private set; } = Language.English;    // 语言
 
         private PlayState _previousPlayState;   // 上一个播放状态
@@ -45,7 +47,6 @@ namespace CG
         {
             _previousPlayState = PlayState;
             PlayState = PlayState.Paused;
-            Paused = true;
             await UniTask.DelayFrame(1);
         }
 
@@ -53,7 +54,6 @@ namespace CG
         public async UniTask Resume()
         {
             PlayState = _previousPlayState;
-            Paused = false;
             await UniTask.DelayFrame(1);
         }
 

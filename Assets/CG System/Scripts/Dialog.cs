@@ -21,7 +21,6 @@ namespace CG
         private Image _nameStamp;   // 名章
         private Image[] _imagesToChange;   // 需要改变的图片
         private Color _color;   // 没有隐藏时的颜色
-        private bool _isHiding = false; // 是否隐藏中
 
         // TODO: 简化逻辑，封装一个 Initialize 方法给外部调用
         public void SetImagesToChange(bool needChangeDialogBox)
@@ -65,7 +64,7 @@ namespace CG
                 if (_color.a >= 1f)
                 {
                     _color.a = 1f;
-                    Array.ForEach(_imagesToChange, image => image.color = _isHiding ? Color.clear : _color);
+                    Array.ForEach(_imagesToChange, image => image.color = CGPlayer.Instance.Hiding ? Color.clear : _color);
                     _textMeshPro.color = _textColor;
                     await StartTyping(token);
                     if (token.IsCancellationRequested)
@@ -76,9 +75,9 @@ namespace CG
                 }
                 float speed = CGPlayer.Instance.FastForward ? _fastForwardDisplaySpeed : _displaySpeed;
                 _color.a += speed * Time.deltaTime;
-                Array.ForEach(_imagesToChange, image => image.color = _isHiding ? Color.clear : _color);
+                Array.ForEach(_imagesToChange, image => image.color = CGPlayer.Instance.Hiding ? Color.clear : _color);
                 // ? Why is next line not working?
-                // _imagesToChange.ForEach(image => image.color = _isHiding ? Color.clear : _color);
+                // _imagesToChange.ForEach(image => image.color = CGPlayer.Instance.Hiding ? Color.clear : _color);
                 await UniTask.Yield();
             }
         }
@@ -120,7 +119,6 @@ namespace CG
 
         public override void Hide()
         {
-            _isHiding = true;
             _dialogBox.color = Color.clear;
             _expression.color = Color.clear;
             _nameStamp.color = Color.clear;
@@ -129,7 +127,6 @@ namespace CG
 
         public override void Show()
         {
-            _isHiding = false;
             _dialogBox.color = _color;
             _expression.color = _color;
             _nameStamp.color = _color;
