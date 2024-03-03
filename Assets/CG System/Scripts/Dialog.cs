@@ -16,11 +16,6 @@ namespace CG
         [SerializeField] private AssetReference _nameStampReference;    // 名章资源
         [SerializeField] private Sprite[] _dialogBoxes; // 对话框数组
 
-        private enum DialogBoxType
-        {
-            普通对话框,
-        }
-
         private Image _dialogBox;   // 对话框
         private Image _expression;  // 表情
         private Image _nameStamp;   // 名章
@@ -28,6 +23,7 @@ namespace CG
         private Color _color;   // 没有隐藏时的颜色
         private bool _isHiding = false; // 是否隐藏中
 
+        // TODO: 简化逻辑，封装一个 Initialize 方法给外部调用
         public void SetImagesToChange(bool needChangeDialogBox)
         {
             if (needChangeDialogBox)
@@ -40,14 +36,16 @@ namespace CG
             }
         }
 
-        public void SetImages(XMLLine line)
+        public void SetImages((DialogBoxType, string, string, EffectType) dialogInfo)
         {
-            _dialogBox.sprite = _dialogBoxes[(int)Enum.Parse(typeof(DialogBoxType), line.Type)];
+            (DialogBoxType dialogBox, string character, string expression, EffectType effect) = dialogInfo;
+
+            _dialogBox.sprite = _dialogBoxes[(int)dialogBox];
             // ! AssetReference 中不能包含中文
             // string imageReference = $"{_expressionReference}/{line.Character}/{line.Character}-{line.Expression}.png";
-            string imageReference = $"Assets/CG System/Art/角色表情图/{line.Character}/{line.Character}-{line.Expression}.png";
+            string imageReference = $"Assets/CG System/Art/角色表情图/{character}/{character}-{expression}.png";
             Addressables.LoadAssetAsync<Sprite>(imageReference).Completed += handle => _expression.sprite = handle.Result;
-            imageReference = $"Assets/CG System/Art/名字/名字-{line.Character}.png";
+            imageReference = $"Assets/CG System/Art/名字/名字-{character}.png";
             Addressables.LoadAssetAsync<Sprite>(imageReference).Completed += handle => _nameStamp.sprite = handle.Result;
         }
 

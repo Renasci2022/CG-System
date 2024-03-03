@@ -48,7 +48,16 @@ namespace CG
     public class XMLLine
     {
         [XmlElement("Type")]
-        public string Type;
+        public string TypeString;
+
+        [XmlIgnore]
+        public LineType Type => Enum.TryParse(TypeString, true, out LineType type) ? type : LineType.Narration;
+
+        [XmlElement("DialogBox")]
+        public string DialogBoxString;
+
+        [XmlIgnore]
+        public DialogBoxType DialogBox => Enum.TryParse(DialogBoxString, true, out DialogBoxType dialogBox) ? dialogBox : DialogBoxType.Normal;
 
         [XmlElement("Character")]
         public string Character;
@@ -56,16 +65,54 @@ namespace CG
         [XmlElement("Expression")]
         public string Expression;
 
+        [XmlElement("Effect")]
+        public string EffectString;
+
+        [XmlIgnore]
+        public EffectType Effect => Enum.TryParse(EffectString, true, out EffectType effect) ? effect : EffectType.None;
+
+        [XmlElement("Interval")]
+        public string IntervalString;
+
+        [XmlIgnore]
+        public float Interval => float.TryParse(IntervalString, out float interval) ? interval : -1f;
+
         [XmlElement("Chinese")]
         public string Chinese;
 
         [XmlElement("English")]
         public string English;
 
-        [XmlElement("OnFinished")]
-        public string OnFinished;
+        [XmlIgnore]
+        public string Text => CGPlayer.Instance.Language == Language.Chinese ? Chinese : English;
 
-        [XmlElement("SpecialEffect")]
-        public string SpecialEffect;
+        [XmlIgnore]
+        public (DialogBoxType, string, string, EffectType) DialogInfo => (DialogBox, Character, Expression, Effect);
+    }
+
+    // TODO: 补充更多类型
+    public enum LineType
+    {
+        Scene,
+        Narration,
+        Dialog,
+    }
+
+    public enum DialogBoxType
+    {
+        Normal,
+    }
+
+    public enum EffectType
+    {
+        None,
+        Shake,
+        Fade,
+    }
+
+    public enum Language
+    {
+        Chinese,
+        English,
     }
 }
