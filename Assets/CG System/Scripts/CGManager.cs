@@ -24,17 +24,16 @@ namespace CG
         [Button("Next")]
         public async UniTask NextLine()
         {
-            if (_player.PlayState == PlayState.Playing)
-            {
-                return;
-            }
-
             _line = _reader.GetNextLine();
-            Debug.Log($"Type: {_line.Type}, Text: {_line.Text}");
+
+            if (_line != null)
+                Debug.Log($"Type: {_line.Type}, Text: {_line.Text}");
 
             if (_line == null)
             {
                 Debug.Log("End of the script");
+                await ClearTextBlocks();
+                await ClearScene(_scenes[_currentSceneIndex - 1]);
                 return;
             }
             else if (_line.Type == LineType.Scene)
@@ -86,8 +85,20 @@ namespace CG
 
         private async UniTask PlayScene(Scene scene)
         {
+            if (_currentSceneIndex != 0)
+            {
+                await ClearScene(_scenes[_currentSceneIndex - 1]);
+            }
             CGPlayer.PlayMethod playMethod = scene.Play;
             _player.PlayMethods.Add(playMethod);
+            await _player.Play();
+            _player.PlayMethods.Clear();
+        }
+
+        private async UniTask ClearScene(Scene scene)
+        {
+            CGPlayer.PlayMethod exitMethod = scene.Exit;
+            _player.PlayMethods.Add(exitMethod);
             await _player.Play();
             _player.PlayMethods.Clear();
         }
@@ -120,16 +131,9 @@ namespace CG
 
         private async UniTask NextLineAfterInterval(float interval)
         {
-            _intervalCts = new();
             if (interval >= 0f)
             {
-                await UniTask.Delay(TimeSpan.FromSeconds(interval), cancellationToken: _intervalCts.Token);
-                NextLine().Forget();
-            }
-            else if (_player.AutoPlay)
-            {
-                // TODO: Implement auto play
-                await UniTask.Delay(TimeSpan.FromSeconds(1f), cancellationToken: _intervalCts.Token);
+                await UniTask.Delay(TimeSpan.FromSeconds(interval));
                 NextLine().Forget();
             }
         }
