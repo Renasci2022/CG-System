@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -6,104 +5,92 @@ using UnityEngine.UI;
 
 namespace CG
 {
-    /// <summary>
-    /// 旁白类，控制旁白的显示和隐藏
-    /// </summary>
     public class Narration : TextBlock
     {
-        [SerializeField] private float _duration = 1f; // 渐变时长
-        [SerializeField] private float _fastForwardDuration = 0.1f; // 快进时渐变时长
+        [SerializeField] private float _displaySpeed = 1f; // 渐变速度
+        [SerializeField] private float _fastForwardDisplaySpeed = 10f; // 快进时渐变速度
 
         private Image _image;   // 旁白框
         private Color _color;   // 没有隐藏时的颜色
-        private bool _entered = false;  // 是否已经进入
-        private bool _isHiding = false; // 是否隐藏中
-        private float _timer = 0f;  // 计时器
 
-        /// <summary>
-        /// 开始或继续播放旁白
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <param name="fastForward">是否快进播放</param>
-        public override async UniTask PlayBlock(CancellationToken cancellationToken, bool fastForward = true)
+        public override async UniTask Play(CancellationToken token)
         {
-            if (_entered)
-            {
-                return;
-            }
-
             gameObject.SetActive(true);
-            float duration = fastForward ? _fastForwardDuration : _duration;
 
             while (true)
             {
-                if (cancellationToken.IsCancellationRequested)
+                if (token.IsCancellationRequested)
                 {
                     break;
                 }
-                if (_timer > duration)
+                if (CGPlayer.Instance.Paused)
                 {
-                    StartTyping(cancellationToken, fastForward).Forget();
-                    _timer = 0f;
-                    _entered = true;
+                    await UniTask.DelayFrame(1, cancellationToken: token);
+                    continue;
+                }
+                if (_color.a >= 1f)
+                {
+                    _color.a = 1f;
+                    _image.color = CGPlayer.Instance.Hiding ? Color.clear : _color;
+                    await StartTyping(token);
+                    if (token.IsCancellationRequested)
+                    {
+                        break;
+                    }
                     break;
                 }
-                _color.a = Mathf.Lerp(0f, 1f, _timer / duration);
-                _image.color = _isHiding ? Color.clear : _color;
-                _timer += Time.deltaTime;
+
+                float speed = CGPlayer.Instance.FastForward ? _fastForwardDisplaySpeed : _displaySpeed;
+                _color.a += speed * Time.deltaTime;
+                _image.color = CGPlayer.Instance.Hiding ? Color.clear : _color;
                 await UniTask.Yield();
             }
         }
 
-        /// <summary>
-        /// 退出旁白
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <param name="fastForward">是否快进播放</param>
-        public override async UniTask ExitBlock(CancellationToken cancellationToken, bool fastForward = false)
+        public override async UniTask Exit(CancellationToken token)
         {
-            float duration = fastForward ? _fastForwardDuration : _duration;
-
             while (true)
             {
-                if (cancellationToken.IsCancellationRequested)
+                if (token.IsCancellationRequested)
                 {
                     break;
                 }
-                if (_timer > duration)
+                if (CGPlayer.Instance.Paused)
                 {
-                    // TODO: 通知外部旁白播放结束
+                    await UniTask.DelayFrame(1, cancellationToken: token);
+                    continue;
+                }
+                if (_color.a <= 0f)
+                {
+                    _color.a = 0f;
+                    _image.color = Color.clear;
+                    _textMeshPro.color = Color.clear;
                     gameObject.SetActive(false);
-                    _timer = 0f;
-                    _entered = false;
                     break;
                 }
-                _color.a = Mathf.Lerp(1f, 0f, _timer / duration);
-                _image.color = _isHiding ? Color.clear : _color;
+                float speed = CGPlayer.Instance.FastForward ? _fastForwardDisplaySpeed : _displaySpeed;
+                _color.a -= speed * Time.deltaTime;
+                _image.color = CGPlayer.Instance.Hiding ? Color.clear : _color;
                 Color color = _textColor;
                 color.a = _color.a;
-                _textMeshPro.color = color;
-                _timer += Time.deltaTime;
+                _textMeshPro.color = CGPlayer.Instance.Hiding ? Color.clear : color;
                 await UniTask.Yield();
             }
         }
 
-        /// <summary>
-        /// 隐藏旁白框及文字，展示背景
-        /// </summary>
-        public override void HideBlock()
+        public override void Skip()
         {
-            _isHiding = true;
+            SkipTyping();
+        }
+
+        public override void Hide()
+        {
             _image.color = Color.clear;
             _textMeshPro.color = Color.clear;
         }
 
-        /// <summary>
-        /// 显示旁白框及文字
-        /// </summary>
-        public override void ShowBlock()
+        public override void Show()
         {
-            _isHiding = false;
             _image.color = _color;
             _textMeshPro.color = _textColor;
         }
@@ -118,8 +105,9 @@ namespace CG
         {
             base.Start();
             gameObject.SetActive(false);
-            _color = _image.color;
+            _color = Color.white;
             _color.a = 0f;
+            _image.color = Color.clear;
         }
     }
 }

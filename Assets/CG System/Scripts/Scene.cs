@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -7,75 +5,85 @@ using UnityEngine.UI;
 
 namespace CG
 {
-    /// <summary>
-    /// 场景类，控制场景的显示和隐藏
-    /// </summary>
-    public class Scene : MonoBehaviour
+    public class Scene : MonoBehaviour, IPlayable
     {
-        [SerializeField] private float _duration = 1f;  // 渐变时长
+        [SerializeField] private float _displaySpeed = 1f;  // 渐变速度
 
         private Image _background;  // 背景图片
-        private float _timer = 0f;  // 计时器
+        private Color _color;   // 没有隐藏时的颜色
 
-        /// <summary>
-        /// 开始或继续播放场景
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        public async UniTask Play(CancellationToken cancellationToken)
+        public async UniTask Play(CancellationToken token)
         {
             gameObject.SetActive(true);
             _background.color = Color.clear;
 
             while (true)
             {
-                if (cancellationToken.IsCancellationRequested)
+                if (token.IsCancellationRequested)
                 {
                     break;
                 }
-                if (_timer > _duration)
+                if (CGPlayer.Instance.Paused)
                 {
+                    await UniTask.DelayFrame(1, cancellationToken: token);
+                    continue;
+                }
+                if (_color.a >= 1f)
+                {
+                    _color.a = 1f;
                     _background.color = Color.white;
-                    _timer = 0f;
                     break;
                 }
-                _background.color = Color.Lerp(Color.clear, Color.white, _timer / _duration);
-                _timer += Time.deltaTime;
+                _color.a += _displaySpeed * Time.deltaTime;
+                _background.color = _color;
                 await UniTask.Yield();
             }
         }
 
-        /// <summary>
-        /// 退出场景
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        public async UniTask Exit(CancellationToken cancellationToken)
+        public async UniTask Exit(CancellationToken token)
         {
             while (true)
             {
-                if (cancellationToken.IsCancellationRequested)
+                if (token.IsCancellationRequested)
                 {
                     break;
                 }
-                if (_timer > _duration)
+                if (CGPlayer.Instance.Paused)
                 {
-                    // TODO: 通知外部播放完毕
+                    await UniTask.DelayFrame(1, cancellationToken: token);
+                    continue;
+                }
+                if (_color.a <= 0f)
+                {
+                    _color.a = 0f;
                     gameObject.SetActive(false);
-                    _timer = 0f;
                     break;
                 }
-                _background.color = Color.Lerp(Color.white, Color.clear, _timer / _duration);
-                _timer += Time.deltaTime;
+                _color.a -= _displaySpeed * Time.deltaTime;
+                _background.color = _color;
                 await UniTask.Yield();
             }
+        }
+
+        public void Skip()
+        {
+        }
+
+        public void Hide()
+        {
+        }
+
+        public void Show()
+        {
         }
 
         private void Awake()
         {
             _background = GetComponentInChildren<Image>();
-        }
 
-        private void Start()
-        {
+            _color = Color.white;
+            _color.a = 0f;
+            _background.color = _color;
             gameObject.SetActive(false);
         }
     }

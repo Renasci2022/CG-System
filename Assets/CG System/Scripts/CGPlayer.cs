@@ -1,157 +1,108 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Sirenix.OdinInspector;
-using Sirenix.Utilities;
+using UnityEditor;
 using UnityEngine;
 
 namespace CG
 {
-    /// <summary>
-    /// CG 播放器 
-    /// </summary>
     public class CGPlayer : MonoBehaviour
     {
-        private bool _fastForward = false;  // 是否快进
-        private bool _isTyping = false; // 是否正在打字
+        public delegate UniTask PlayMethod(CancellationToken token);    // 播放方法委托
+        public List<PlayMethod> PlayMethods = new();    // 播放方法列表
+        public List<TextBlock> TextBlocks = new();  // 文本块列表
 
-        private int _currentSceneIndex = 0; // 当前场景索引
-        private int _currentTextBlockIndex = 0; // 当前文本块索引
+        // TODO: 用事件代替 Instance
+        public static CGPlayer Instance { get; private set; }
+        public PlayState PlayState { get; private set; } = PlayState.Stopped;    // 播放状态
+        public bool FastForward { get; private set; } = false;    // 是否快进
+        public bool AutoPlay { get; private set; } = false;    // 是否自动播放
+        public bool Paused => PlayState == PlayState.Paused;    // 是否暂停
+        public bool Hiding => PlayState == PlayState.Hiding;    // 是否隐藏
+        public Language Language { get; private set; } = Language.English;    // 语言
 
-        private Scene[] _scenes;    // 场景数组
-        private TextBlock[] _narrations;    // 对话数组
+        private PlayState _previousPlayState;   // 上一个播放状态
+        private CancellationTokenSource _cancellationTokenSource;    // 取消令牌源
 
-        /// <summary>
-        /// 播放场景
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        [Button]
-        public async UniTask PlayScene(CancellationToken cancellationToken)
+        [Button("Play")]
+        public async UniTask Play()
         {
-            if (_currentSceneIndex >= _scenes.Length)
-            {
-                return;
-            }
-
-            _narrations = _scenes[_currentSceneIndex].GetComponentsInChildren<Narration>();
-            _currentTextBlockIndex = 0;
-            await _scenes[_currentSceneIndex].Play(cancellationToken);
+            PlayState = PlayState.Playing;
+            _cancellationTokenSource = new();
+            UniTask[] tasks = PlayMethods.Select(method => method(_cancellationTokenSource.Token)).ToArray();
+            await UniTask.WhenAll(tasks);
         }
 
-        /// <summary>
-        /// 播放下一个文本块
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>  
-        [Button]
-        public async UniTask NextTextBlock(CancellationToken cancellationToken)
+        [Button("Stop")]
+        public void Stop()
         {
-            // TODO: 目前只支持 Narration 的播放
-            if (_currentTextBlockIndex >= _narrations.Length)
-            {
-                return;
-            }
-
-            TextBlock textBlock = _narrations[_currentTextBlockIndex];
-            await textBlock.PlayBlock(cancellationToken, _fastForward);
-            _isTyping = true;
-            await textBlock.StartTyping(cancellationToken, _fastForward);
-            _isTyping = false;
-            _currentTextBlockIndex++;
-
-            if (_currentTextBlockIndex > _narrations.Length)
-            {
-                // TODO: 通知外部文本块播放完毕
-            }
+            PlayState = PlayState.Stopped;
+            _cancellationTokenSource?.Cancel();
         }
 
-        /// <summary>
-        /// 清空所有旁白 
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        [Button]
-        public async UniTask ClearNarrations(CancellationToken cancellationToken)
+        [Button("Pause")]
+        public async UniTask Pause()
         {
-            await UniTask.WhenAll(_narrations.Select(narration => narration.ExitBlock(cancellationToken)));
+            _previousPlayState = PlayState;
+            PlayState = PlayState.Paused;
+            await UniTask.DelayFrame(1);
         }
 
-        /// <summary>
-        /// 退出场景
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        [Button]
-        public async UniTask ExitScene(CancellationToken cancellationToken)
+        [Button("Resume")]
+        public async UniTask Resume()
         {
-            ClearNarrations(cancellationToken).Forget();
-            await _scenes[_currentSceneIndex].Exit(cancellationToken);
-            _currentSceneIndex++;
-            if (_currentSceneIndex > _scenes.Length)
-            {
-                // TODO: 通知外部场景播放完毕
-            }
+            PlayState = _previousPlayState;
+            await UniTask.DelayFrame(1);
         }
 
-        /// <summary>
-        /// 设置快进模式 
-        /// </summary>
-        /// <param name="fastForward">是否快进</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        [Button]
-        public void SetFastForward(bool fastForward, CancellationToken cancellationToken)
+        [Button("Skip")]
+        public void Skip()
         {
-            if (fastForward == _fastForward)
-            {
-                return;
-            }
-
-            _fastForward = fastForward;
-            // TODO: 根据情况是否取消当前的播放，并以快进模式重新播放
+            TextBlocks.ForEach(textBlock => textBlock.Skip());
         }
 
-        /// <summary>
-        /// 如果正在打字，则跳过打字
-        /// </summary>
-        [Button]
-        public void SkipTyping()
+        [Button("Hide")]
+        public void Hide()
         {
-            if (_isTyping)
-            {
-                _narrations[_currentTextBlockIndex].SkipTyping();
-            }
+            _previousPlayState = PlayState;
+            PlayState = PlayState.Hiding;
+            TextBlocks.ForEach(textBlock => textBlock.Hide());
         }
 
-        /// <summary>
-        /// 隐藏所有旁白
-        /// </summary>
-        [Button]
-        public void HideNarrations()
+        [Button("Show")]
+        public void Show()
         {
-            // TODO: 还未考虑对话的情况
-            _narrations.ForEach(narration => narration.HideBlock());
+            PlayState = _previousPlayState;
+            TextBlocks.ForEach(textBlock => textBlock.Show());
         }
 
-        /// <summary>
-        /// 显示所有旁白
-        /// </summary> 
-        [Button]
-        public void ShowNarrations()
+        [Button("Set Fast Forward")]
+        public void SetFastForward(bool fastForward)
         {
-            // TODO: 还未考虑对话的情况
-            _narrations.ForEach(narration => narration.ShowBlock());
+            AutoPlay = fastForward;
+            FastForward = fastForward;
+        }
+
+        [Button("Set Auto Play")]
+        public void SetAutoPlay(bool autoPlay)
+        {
+            AutoPlay = autoPlay;
         }
 
         private void Awake()
         {
-            GameObject canvasObject = GameObject.Find("Canvas");
-            if (canvasObject == null)
-            {
-                Debug.LogError("Canvas not found");
-                return;
-            }
-            _scenes = canvasObject.GetComponentsInChildren<Scene>();
-            if (_scenes.Length == 0)
-            {
-                Debug.LogError("No scene found");
-                return;
-            }
+            Instance = this;
         }
+    }
+
+    public enum PlayState
+    {
+        Stopped,
+        Playing,
+        Waiting,
+        Paused,
+        Hiding,
     }
 }
