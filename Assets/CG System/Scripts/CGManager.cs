@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace CG
@@ -20,8 +21,14 @@ namespace CG
         private int _currentSceneIndex = 0;
         private int _currentNarrationIndex = 0;
 
+        [Button("Next")]
         public async UniTask NextLine()
         {
+            if (_player.PlayState == PlayState.Playing)
+            {
+                return;
+            }
+
             _line = _reader.GetNextLine();
             Debug.Log($"Type: {_line.Type}, Text: {_line.Text}");
 
