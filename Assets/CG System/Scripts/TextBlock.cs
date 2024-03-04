@@ -63,7 +63,7 @@ namespace CG
             _textMeshPro.color = _textColor;
         }
 
-        public abstract UniTask Play(CancellationToken cancellationToken);
+        public abstract UniTask Enter(CancellationToken cancellationToken);
         public abstract UniTask Exit(CancellationToken cancellationToken);
         public abstract void Skip();
         public abstract void Hide();

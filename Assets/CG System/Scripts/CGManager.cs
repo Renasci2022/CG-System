@@ -87,7 +87,7 @@ namespace CG
             {
                 await ClearScene(_scenes[_currentSceneIndex - 1]);
             }
-            CGPlayer.PlayMethod playMethod = scene.Play;
+            CGPlayer.PlayMethod playMethod = scene.Enter;
             _player.PlayMethods.Add(playMethod);
             await _player.Play();
             _player.PlayMethods.Clear();
@@ -103,7 +103,7 @@ namespace CG
 
         private async UniTask PlayTextBlock(TextBlock textBlock)
         {
-            CGPlayer.PlayMethod playMethod = textBlock.Play;
+            CGPlayer.PlayMethod playMethod = textBlock.Enter;
             _player.PlayMethods.Add(playMethod);
             _player.TextBlocks.Add(textBlock);
             await _player.Play();

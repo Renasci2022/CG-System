@@ -22,6 +22,9 @@ namespace CG
         private Image[] _imagesToChange;   // 需要改变的图片
         private Color _color;   // 没有隐藏时的颜色
 
+        private bool _isEntering = false;   // 是否正在进入
+        private bool _isExiting = false;    // 是否正在退出
+
         // TODO: 简化逻辑，封装一个 Initialize 方法给外部调用
         public void SetImagesToChange(bool needChangeDialogBox)
         {
@@ -48,8 +51,10 @@ namespace CG
             Addressables.LoadAssetAsync<Sprite>(imageReference).Completed += handle => _nameStamp.sprite = handle.Result;
         }
 
-        public override async UniTask Play(CancellationToken token)
+        public override async UniTask Enter(CancellationToken token)
         {
+            _isEntering = true;
+
             while (true)
             {
                 if (token.IsCancellationRequested)
@@ -63,14 +68,13 @@ namespace CG
                 }
                 if (_color.a >= 1f)
                 {
+                    _isEntering = false;
+
                     _color.a = 1f;
                     Array.ForEach(_imagesToChange, image => image.color = CGPlayer.Instance.Hiding ? Color.clear : _color);
                     _textMeshPro.color = _textColor;
+
                     await StartTyping(token);
-                    if (token.IsCancellationRequested)
-                    {
-                        break;
-                    }
                     break;
                 }
                 float speed = CGPlayer.Instance.FastForward ? _fastForwardDisplaySpeed : _displaySpeed;
@@ -84,6 +88,8 @@ namespace CG
 
         public override async UniTask Exit(CancellationToken token)
         {
+            _isExiting = true;
+
             while (true)
             {
                 if (token.IsCancellationRequested)
@@ -97,6 +103,8 @@ namespace CG
                 }
                 if (_color.a <= 0f)
                 {
+                    _isExiting = false;
+
                     _color.a = 0f;
                     Array.ForEach(_imagesToChange, image => image.color = Color.clear);
                     _textMeshPro.color = Color.clear;
@@ -114,6 +122,15 @@ namespace CG
 
         public override void Skip()
         {
+            if (_isEntering)
+            {
+                _color.a = 1f;
+            }
+            if (_isExiting)
+            {
+                _color.a = 0f;
+            }
+
             SkipTyping();
         }
 

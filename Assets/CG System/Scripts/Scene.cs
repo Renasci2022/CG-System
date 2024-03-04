@@ -12,7 +12,7 @@ namespace CG
         private Image _background;  // 背景图片
         private Color _color;   // 没有隐藏时的颜色
 
-        public async UniTask Play(CancellationToken token)
+        public async UniTask Enter(CancellationToken token)
         {
             gameObject.SetActive(true);
             _background.color = Color.clear;
@@ -63,18 +63,6 @@ namespace CG
                 _background.color = _color;
                 await UniTask.Yield();
             }
-        }
-
-        public void Skip()
-        {
-        }
-
-        public void Hide()
-        {
-        }
-
-        public void Show()
-        {
         }
 
         private void Awake()
