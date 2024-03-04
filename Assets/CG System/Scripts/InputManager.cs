@@ -8,11 +8,11 @@ namespace CG
 {
     public class InputManager : MonoBehaviour
     {
-        CGManager _manager;
+        private CGPlayer _player;
 
         private void Start()
         {
-            _manager = FindObjectOfType<CGManager>();
+            _player = FindObjectOfType<CGPlayer>();
             var gestureController = FindObjectOfType<GestureController>();
             if (gestureController != null)
             {
@@ -22,14 +22,27 @@ namespace CG
 
         private void OnGestureDetected(object sender, GestureEventArgs e)
         {
-            switch (e.Type)
+            if (e.Type == GestureType.Click)
             {
-                case GestureType.Click:
-                    Debug.Log("Click detected");
-                    _manager.NextLine().Forget();
+                OnClicked();
+            }
+        }
+
+        private void OnClicked()
+        {
+            switch (_player.PlayState)
+            {
+                case PlayState.Playing:
+                    _player.Skip();
+                    break;
+                case PlayState.Waiting:
+                    _player.Next();
+                    break;
+                case PlayState.Hiding:
+                    _player.Show();
                     break;
                 default:
-                    Debug.Log("Unknown gesture detected");
+                    Debug.Log("Nothing to do");
                     break;
             }
         }

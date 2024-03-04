@@ -16,8 +16,6 @@ namespace CG
         private CGPlayer _player;
         private XMLReader _reader;
 
-        private CancellationTokenSource _intervalCts;
-
         private int _currentSceneIndex = 0;
         private int _currentNarrationIndex = 0;
 
@@ -66,7 +64,7 @@ namespace CG
                 Debug.LogError("Unknown line type");
             }
 
-            NextLineAfterInterval(_line.Interval).Forget();
+            _player.NextAfterInterval(_line.Interval).Forget();
         }
 
         private void Awake()
@@ -127,15 +125,6 @@ namespace CG
             await _player.Play();
             _player.TextBlocks.Clear();
             _player.PlayMethods.Clear();
-        }
-
-        private async UniTask NextLineAfterInterval(float interval)
-        {
-            if (interval >= 0f)
-            {
-                await UniTask.Delay(TimeSpan.FromSeconds(interval));
-                NextLine().Forget();
-            }
         }
     }
 }
