@@ -1,4 +1,5 @@
 using System;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -7,7 +8,7 @@ namespace CG
     [RequireComponent(typeof(EventTrigger))]
     public class GestureController : MonoBehaviour, IPointerClickHandler
     {
-        public GestureType _gestureType = GestureType.Click;
+        [SerializeField] private GestureType _gestureType = GestureType.Click;
 
         public event EventHandler<GestureEventArgs> GestureDetected;
 
@@ -39,6 +40,7 @@ namespace CG
         }
     }
 
+    [EnumPaging]
     public enum GestureType
     {
         Click,

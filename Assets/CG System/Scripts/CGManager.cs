@@ -17,7 +17,6 @@ namespace CG
         private int _currentSceneIndex = 0;
         private int _currentNarrationIndex = 0;
 
-        [Button("Next")]
         public async UniTask NextLine()
         {
             _line = _reader.GetNextLine();
