@@ -83,14 +83,14 @@ namespace CG
         [XmlElement("English")]
         public string English;
 
+        // ? 是否存在性能问题
         [XmlIgnore]
-        public string Text => CGPlayer.Instance.Language == Language.Chinese ? Chinese : English;
+        public string Text => GameObject.FindObjectOfType<CGPlayer>().Language == Language.Chinese ? Chinese : English;
 
         [XmlIgnore]
         public (DialogBoxType, string, string, EffectType) DialogInfo => (DialogBox, Character, Expression, Effect);
     }
 
-    // TODO: 补充更多类型
     public enum LineType
     {
         Scene,
