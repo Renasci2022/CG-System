@@ -1,19 +1,31 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace CG
 {
+    [RequireComponent(typeof(EventTrigger))]
     public class GestureController : MonoBehaviour, IPointerClickHandler
     {
+        public GestureType _gestureType = GestureType.Click;
+
         public event EventHandler<GestureEventArgs> GestureDetected;
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            GestureDetected?.Invoke(this, new GestureEventArgs(GestureType.Click));
+            if (_gestureType != GestureType.Click)
+            {
+                return;
+            }
+
+            Debug.Log($"Click detected on {gameObject.name}");
+            GestureDetected?.Invoke(this, new GestureEventArgs(_gestureType));
+        }
+
+        private void Start()
+        {
+            InputManager inputManager = FindObjectOfType<InputManager>();
+            GestureDetected += inputManager.OnGestureDetected;
         }
     }
 
