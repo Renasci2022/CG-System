@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace CG
 {
-    public abstract class TextBlock : MonoBehaviour, IPlayable
+    public abstract class TextBlock : MonoBehaviour, IPlayable, ISkipable
     {
         [SerializeField] protected Color _textColor = Color.black; // 文本颜色
 

@@ -8,11 +8,14 @@ namespace CG
         public UniTask Enter(CancellationToken cancellationToken);
 
         public UniTask Exit(CancellationToken cancellationToken);
+    }
 
-        public void Skip() { }
+    public interface ISkipable
+    {
+        public void Skip();
 
-        public void Hide() { }
+        public void Hide();
 
-        public void Show() { }
+        public void Show();
     }
 }
