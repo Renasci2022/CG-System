@@ -132,10 +132,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 124807443}
+  - component: {fileID: 124807446}
   - component: {fileID: 124807445}
   - component: {fileID: 124807444}
   - component: {fileID: 124807447}
-  - component: {fileID: 124807446}
   m_Layer: 5
   m_Name: ClickMe
   m_TagString: Untagged
@@ -174,7 +174,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5bed3075566431b4ab80d4b4fa069816, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _gestureType: 0
+  _gestureType: 3
+  _maxElapseTime: 1.5
+  _dragSpeedThreshold: 500
+  _minCircleRadius: 10
+  _maxCircleRadius: 50
+  _minCircleAngle: 300
 --- !u!114 &124807445
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1801,12 +1806,17 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1674535568}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5bed3075566431b4ab80d4b4fa069816, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _gestureType: 0
+  _maxElapseTime: 1.5
+  _dragSpeedThreshold: 500
+  _minCircleRadius: 10
+  _maxCircleRadius: 50
+  _minCircleAngle: 300
 --- !u!1 &1785204351
 GameObject:
   m_ObjectHideFlags: 0
