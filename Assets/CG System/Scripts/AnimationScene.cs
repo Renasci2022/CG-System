@@ -16,8 +16,10 @@ namespace CG
         public override async UniTask Enter(CancellationToken token)
         {
             gameObject.SetActive(true);
-            float interval = 1f / _fps;
 
+            await base.Enter(token);
+
+            float interval = 1f / _fps;
             while (_index < _frames.Length)
             {
                 if (token.IsCancellationRequested)
@@ -37,9 +39,9 @@ namespace CG
 
         protected override void Awake()
         {
+            base.Awake();
             _background = GetComponent<Image>();
             _background.sprite = _frames[0];
-            gameObject.SetActive(false);
         }
 
     }

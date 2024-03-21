@@ -67,7 +67,7 @@ namespace CG
         private void Awake()
         {
             GameObject canvas = GameObject.Find("Canvas");
-            _scenes = canvas.GetComponentsInChildren<Scene>();
+            _scenes = canvas.GetComponentsInChildren<Scene>(true);
             _dialog = canvas.GetComponentInChildren<Dialog>();
             _player = GameObject.Find("CGPlayer").GetComponent<CGPlayer>();
             _reader = GetComponent<XMLReader>();
