@@ -7,12 +7,12 @@ namespace CG
 {
     public class Scene : MonoBehaviour, IPlayable
     {
-        [SerializeField] private float _displaySpeed = 1f;  // 渐变速度
+        [SerializeField] protected float _displaySpeed = 1f;  // 渐变速度
 
-        private Image _background;  // 背景图片
-        private Color _color;   // 没有隐藏时的颜色
+        protected Image _background;  // 背景图片
+        protected Color _color;   // 没有隐藏时的颜色
 
-        public async UniTask Enter(CancellationToken token)
+        public virtual async UniTask Enter(CancellationToken token)
         {
             gameObject.SetActive(true);
             _background.color = Color.clear;
@@ -40,7 +40,7 @@ namespace CG
             }
         }
 
-        public async UniTask Exit(CancellationToken token)
+        public virtual async UniTask Exit(CancellationToken token)
         {
             while (true)
             {
@@ -65,7 +65,7 @@ namespace CG
             }
         }
 
-        private void Awake()
+        protected virtual void Awake()
         {
             _background = GetComponentInChildren<Image>();
 
