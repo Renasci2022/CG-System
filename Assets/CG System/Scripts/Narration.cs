@@ -100,6 +100,7 @@ namespace CG
 
         public override void Hide()
         {
+            //FIXME: 在调用后播放的旁白不会隐藏
             _image.color = Color.clear;
             _textMeshPro.color = Color.clear;
         }

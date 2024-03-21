@@ -51,6 +51,7 @@ namespace CG
             Addressables.LoadAssetAsync<Sprite>(imageReference).Completed += handle => _nameStamp.sprite = handle.Result;
         }
 
+        // FIXME: 修复显示错误
         public override async UniTask Enter(CancellationToken token)
         {
             _isEntering = true;

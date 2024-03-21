@@ -59,6 +59,8 @@ namespace CG
 
         protected void Start()
         {
+            // TODO: 正确设置字体资产
+
             _textMeshPro.maxVisibleCharacters = 0;
             _textMeshPro.color = _textColor;
         }
