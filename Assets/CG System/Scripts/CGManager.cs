@@ -21,9 +21,6 @@ namespace CG
         {
             _line = _reader.GetNextLine();
 
-            if (_line != null)
-                Debug.Log($"Type: {_line.Type}, Text: {_line.Text}");
-
             if (_line == null)
             {
                 Debug.Log("End of the script");
@@ -31,7 +28,14 @@ namespace CG
                 await ClearScene(_scenes[_currentSceneIndex - 1]);
                 return;
             }
-            else if (_line.Type == LineType.Scene)
+            else
+            {
+                Debug.Log($"Type: {_line.Type}, Text: {_line.Text}");
+            }
+
+            _dialog.IsPlaying = _line.Type == LineType.Dialog;
+
+            if (_line.Type == LineType.Scene)
             {
                 _narrations = _scenes[_currentSceneIndex].GetComponentsInChildren<Narration>();
                 _currentNarrationIndex = 0;
@@ -50,8 +54,7 @@ namespace CG
             else if (_line.Type == LineType.Dialog)
             {
                 _dialog.Text = _line.Text;
-                _dialog.SetImages(_line.DialogInfo);
-                _dialog.SetImagesToChange(true);
+                _dialog.DialogInfo = _line.DialogInfo;
 
                 await ClearTextBlocks();
                 await PlayTextBlock(_dialog);

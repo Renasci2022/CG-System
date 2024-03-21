@@ -16,45 +16,45 @@ namespace CG
         [SerializeField] private AssetReference _nameStampReference;    // 名章资源
         [SerializeField] private Sprite[] _dialogBoxes; // 对话框数组
 
+        public bool IsPlaying { get; set; }
+
+        private DialogInfo _dialogInfo; // 对话信息
+
+        public DialogInfo DialogInfo
+        {
+            get => _dialogInfo;
+            set
+            {
+                _dialogInfo = value;
+                if (_needFadeIn)
+                {
+                    _needFadeIn = false;
+                    _imagesToChange = new Image[] { _dialogBox, _expression, _nameStamp };
+                }
+                else
+                {
+                    _imagesToChange = new Image[] { };
+                }
+            }
+        }
+
         private Image _dialogBox;   // 对话框
         private Image _expression;  // 表情
         private Image _nameStamp;   // 名章
         private Image[] _imagesToChange;   // 需要改变的图片
         private Color _color;   // 没有隐藏时的颜色
 
+        private bool _needFadeIn = true;    // 是否需要淡入
+
         private bool _isEntering = false;   // 是否正在进入
         private bool _isExiting = false;    // 是否正在退出
 
-        // TODO: 简化逻辑，封装一个 Initialize 方法给外部调用
-        public void SetImagesToChange(bool needChangeDialogBox)
-        {
-            if (needChangeDialogBox)
-            {
-                _imagesToChange = new Image[] { _dialogBox, _expression, _nameStamp };
-            }
-            else
-            {
-                _imagesToChange = new Image[] { _expression, _nameStamp };
-            }
-        }
-
-        public void SetImages((DialogBoxType, string, string, EffectType) dialogInfo)
-        {
-            (DialogBoxType dialogBox, string character, string expression, EffectType effect) = dialogInfo;
-
-            _dialogBox.sprite = _dialogBoxes[(int)dialogBox];
-            // ! AssetReference 中不能包含中文
-            // string imageReference = $"{_expressionReference}/{line.Character}/{line.Character}-{line.Expression}.png";
-            string imageReference = $"Assets/CG System/Art/角色表情图/{character}/{character}-{expression}.png";
-            Addressables.LoadAssetAsync<Sprite>(imageReference).Completed += handle => _expression.sprite = handle.Result;
-            imageReference = $"Assets/CG System/Art/名字/名字-{character}.png";
-            Addressables.LoadAssetAsync<Sprite>(imageReference).Completed += handle => _nameStamp.sprite = handle.Result;
-        }
-
-        // FIXME: 修复显示错误
         public override async UniTask Enter(CancellationToken token)
         {
             _isEntering = true;
+            SetImages(_dialogInfo);
+            InitializeText();
+            await UniTask.DelayFrame(1, cancellationToken: token);
 
             while (true)
             {
@@ -89,7 +89,15 @@ namespace CG
 
         public override async UniTask Exit(CancellationToken token)
         {
+            if (IsPlaying)
+            {
+                // TODO: 在连续播放时，也可以淡出部分图片以优化显示效果
+                return;
+            }
+
             _isExiting = true;
+            _needFadeIn = true;
+            _imagesToChange = new Image[] { _dialogBox, _expression, _nameStamp };
 
             while (true)
             {
@@ -166,6 +174,19 @@ namespace CG
             _color.a = 0f;
             _imagesToChange = new Image[] { _dialogBox, _expression, _nameStamp };
             Array.ForEach(_imagesToChange, image => image.color = Color.clear);
+        }
+
+        private void SetImages(DialogInfo dialogInfo)
+        {
+            (DialogBoxType dialogBox, string character, string expression, EffectType effect) = (dialogInfo.DialogBox, dialogInfo.Character, dialogInfo.Expression, dialogInfo.Effect);
+
+            _dialogBox.sprite = _dialogBoxes[(int)dialogBox];
+            // ! AssetReference 中不能包含中文
+            // string imageReference = $"{_expressionReference}/{line.Character}/{line.Character}-{line.Expression}.png";
+            string imageReference = $"Assets/CG System/Art/角色表情图/{character}/{character}-{expression}.png";
+            Addressables.LoadAssetAsync<Sprite>(imageReference).Completed += handle => _expression.sprite = handle.Result;
+            imageReference = $"Assets/CG System/Art/名字/名字-{character}.png";
+            Addressables.LoadAssetAsync<Sprite>(imageReference).Completed += handle => _nameStamp.sprite = handle.Result;
         }
     }
 }

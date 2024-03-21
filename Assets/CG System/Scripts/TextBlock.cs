@@ -61,8 +61,7 @@ namespace CG
         {
             // TODO: 正确设置字体资产
 
-            _textMeshPro.maxVisibleCharacters = 0;
-            _textMeshPro.color = _textColor;
+            InitializeText();
         }
 
         public abstract UniTask Enter(CancellationToken cancellationToken);
@@ -70,5 +69,11 @@ namespace CG
         public abstract void Skip();
         public abstract void Hide();
         public abstract void Show();
+
+        protected void InitializeText()
+        {
+            _textMeshPro.maxVisibleCharacters = 0;
+            _textMeshPro.color = _textColor;
+        }
     }
 }

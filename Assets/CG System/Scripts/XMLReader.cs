@@ -88,7 +88,7 @@ namespace CG
         public string Text => GameObject.FindObjectOfType<CGPlayer>().Language == Language.Chinese ? Chinese : English;
 
         [XmlIgnore]
-        public (DialogBoxType, string, string, EffectType) DialogInfo => (DialogBox, Character, Expression, Effect);
+        public DialogInfo DialogInfo => new() { DialogBox = DialogBox, Character = Character, Expression = Expression, Effect = Effect };
     }
 
     public enum LineType
@@ -114,5 +114,13 @@ namespace CG
     {
         Chinese,
         English,
+    }
+
+    public struct DialogInfo
+    {
+        public DialogBoxType DialogBox;
+        public string Character;
+        public string Expression;
+        public EffectType Effect;
     }
 }
