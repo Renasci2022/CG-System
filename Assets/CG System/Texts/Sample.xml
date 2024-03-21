@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<XMLData xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<Line>
+		<Type>Scene</Type>
+		<Interval>1</Interval>
+	</Line>
+	<Line>
+		<Interval>1</Interval>
+		<Chinese>让我的心勇敢地展翅翱翔</Chinese>
+		<English>Let my heart bravely spread the wings</English>
+	</Line>
+	<Line>
+		<Interval>1</Interval>
+		<Chinese>飞掠黑夜去追寻明亮的月光</Chinese>
+		<English>Soaring past the night to trace the bright moonlight</English>
+	</Line>
+	<Line>
+		<Interval>1</Interval>
+		<Chinese>让云彩治愈我的伤痛</Chinese>
+		<English>Let the clouds heal me of the stings</English>
+	</Line>
+	<Line>
+		<Chinese>轻轻抹去我一生的伤痛</Chinese>
+		<English>Gently wipe the sorrow of my life I dream</English>
+	</Line>
+	<Line>
+		<Type>Dialog</Type>
+		<Character>小水</Character>
+		<Expression>惊恐</Expression>
+		<Interval>1</Interval>
+		<Chinese>对...不起......</Chinese>
+		<English>S-Sorry…</English>
+	</Line>
+	<Line>
+		<Type>Dialog</Type>
+		<Character>文民</Character>
+		<Expression>苦笑</Expression>
+		<Chinese>如果我动作再快一点的话，那傻丫头是不是就不用死了呢？</Chinese>
+		<English>If I act even faster, does that silly girl not have to die?</English>
+	</Line>
+	<Line>
+		<Type>Scene</Type>
+	</Line>
+</XMLData>

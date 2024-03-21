@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace CG
 {
-    public abstract class TextBlock : MonoBehaviour, IPlayable
+    public abstract class TextBlock : MonoBehaviour, IPlayable, ISkipable
     {
         [SerializeField] protected Color _textColor = Color.black; // 文本颜色
 
@@ -59,14 +59,21 @@ namespace CG
 
         protected void Start()
         {
-            _textMeshPro.maxVisibleCharacters = 0;
-            _textMeshPro.color = _textColor;
+            // TODO: 正确设置字体资产
+
+            InitializeText();
         }
 
-        public abstract UniTask Play(CancellationToken cancellationToken);
+        public abstract UniTask Enter(CancellationToken cancellationToken);
         public abstract UniTask Exit(CancellationToken cancellationToken);
         public abstract void Skip();
         public abstract void Hide();
         public abstract void Show();
+
+        protected void InitializeText()
+        {
+            _textMeshPro.maxVisibleCharacters = 0;
+            _textMeshPro.color = _textColor;
+        }
     }
 }

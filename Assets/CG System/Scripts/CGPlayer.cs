@@ -21,10 +21,14 @@ namespace CG
         public bool AutoPlay { get; private set; } = false;    // 是否自动播放
         public bool Paused => PlayState == PlayState.Paused;    // 是否暂停
         public bool Hiding => PlayState == PlayState.Hiding;    // 是否隐藏
-        public Language Language { get; private set; } = Language.English;    // 语言
+        public Language Language { get; private set; } = Language.Chinese;    // 语言
+
+        private CGManager _manager;    // CG 管理器
 
         private PlayState _previousPlayState;   // 上一个播放状态
         private CancellationTokenSource _cancellationTokenSource;    // 取消令牌源
+
+        private float _timer;   // 计时器
 
         [Button("Play")]
         public async UniTask Play()
@@ -40,6 +44,16 @@ namespace CG
         {
             PlayState = PlayState.Stopped;
             _cancellationTokenSource?.Cancel();
+        }
+
+        [Button("Next")]
+        public void Next()
+        {
+            if (PlayState != PlayState.Waiting)
+            {
+                return;
+            }
+            _manager.NextLine().Forget();
         }
 
         [Button("Pause")]
@@ -60,6 +74,7 @@ namespace CG
         [Button("Skip")]
         public void Skip()
         {
+            _timer = 0f;
             TextBlocks.ForEach(textBlock => textBlock.Skip());
         }
 
@@ -91,9 +106,36 @@ namespace CG
             AutoPlay = autoPlay;
         }
 
+        public async UniTask NextAfterInterval(float interval)
+        {
+            if (interval < 0)
+            {
+                PlayState = PlayState.Waiting;
+                return;
+            }
+
+            _timer = interval;
+            while (_timer > 0)
+            {
+                if (PlayState == PlayState.Paused)
+                {
+                    await UniTask.DelayFrame(1);
+                    continue;
+                }
+                await UniTask.DelayFrame(1);
+                _timer -= Time.deltaTime;
+            }
+            _manager.NextLine().Forget();
+        }
+
         private void Awake()
         {
             Instance = this;
+        }
+
+        private void Start()
+        {
+            _manager = FindObjectOfType<CGManager>();
         }
     }
 

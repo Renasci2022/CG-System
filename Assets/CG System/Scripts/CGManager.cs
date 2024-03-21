@@ -1,5 +1,3 @@
-using System;
-using System.Threading;
 using Cysharp.Threading.Tasks;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -16,28 +14,28 @@ namespace CG
         private CGPlayer _player;
         private XMLReader _reader;
 
-        private CancellationTokenSource _intervalCts;
-
         private int _currentSceneIndex = 0;
         private int _currentNarrationIndex = 0;
 
-        [Button("Next")]
         public async UniTask NextLine()
         {
-            if (_player.PlayState == PlayState.Playing)
-            {
-                return;
-            }
-
             _line = _reader.GetNextLine();
-            Debug.Log($"Type: {_line.Type}, Text: {_line.Text}");
 
             if (_line == null)
             {
                 Debug.Log("End of the script");
+                await ClearTextBlocks();
+                await ClearScene(_scenes[_currentSceneIndex - 1]);
                 return;
             }
-            else if (_line.Type == LineType.Scene)
+            else
+            {
+                Debug.Log($"Type: {_line.Type}, Text: {_line.Text}");
+            }
+
+            _dialog.IsPlaying = _line.Type == LineType.Dialog;
+
+            if (_line.Type == LineType.Scene)
             {
                 _narrations = _scenes[_currentSceneIndex].GetComponentsInChildren<Narration>();
                 _currentNarrationIndex = 0;
@@ -56,8 +54,7 @@ namespace CG
             else if (_line.Type == LineType.Dialog)
             {
                 _dialog.Text = _line.Text;
-                _dialog.SetImages(_line.DialogInfo);
-                _dialog.SetImagesToChange(true);
+                _dialog.DialogInfo = _line.DialogInfo;
 
                 await ClearTextBlocks();
                 await PlayTextBlock(_dialog);
@@ -67,13 +64,13 @@ namespace CG
                 Debug.LogError("Unknown line type");
             }
 
-            NextLineAfterInterval(_line.Interval).Forget();
+            _player.NextAfterInterval(_line.Interval).Forget();
         }
 
         private void Awake()
         {
             GameObject canvas = GameObject.Find("Canvas");
-            _scenes = canvas.GetComponentsInChildren<Scene>();
+            _scenes = canvas.GetComponentsInChildren<Scene>(true);
             _dialog = canvas.GetComponentInChildren<Dialog>();
             _player = GameObject.Find("CGPlayer").GetComponent<CGPlayer>();
             _reader = GetComponent<XMLReader>();
@@ -86,15 +83,27 @@ namespace CG
 
         private async UniTask PlayScene(Scene scene)
         {
-            CGPlayer.PlayMethod playMethod = scene.Play;
+            if (_currentSceneIndex != 0)
+            {
+                await ClearScene(_scenes[_currentSceneIndex - 1]);
+            }
+            CGPlayer.PlayMethod playMethod = scene.Enter;
             _player.PlayMethods.Add(playMethod);
+            await _player.Play();
+            _player.PlayMethods.Clear();
+        }
+
+        private async UniTask ClearScene(Scene scene)
+        {
+            CGPlayer.PlayMethod exitMethod = scene.Exit;
+            _player.PlayMethods.Add(exitMethod);
             await _player.Play();
             _player.PlayMethods.Clear();
         }
 
         private async UniTask PlayTextBlock(TextBlock textBlock)
         {
-            CGPlayer.PlayMethod playMethod = textBlock.Play;
+            CGPlayer.PlayMethod playMethod = textBlock.Enter;
             _player.PlayMethods.Add(playMethod);
             _player.TextBlocks.Add(textBlock);
             await _player.Play();
@@ -116,22 +125,6 @@ namespace CG
             await _player.Play();
             _player.TextBlocks.Clear();
             _player.PlayMethods.Clear();
-        }
-
-        private async UniTask NextLineAfterInterval(float interval)
-        {
-            _intervalCts = new();
-            if (interval >= 0f)
-            {
-                await UniTask.Delay(TimeSpan.FromSeconds(interval), cancellationToken: _intervalCts.Token);
-                NextLine().Forget();
-            }
-            else if (_player.AutoPlay)
-            {
-                // TODO: Implement auto play
-                await UniTask.Delay(TimeSpan.FromSeconds(1f), cancellationToken: _intervalCts.Token);
-                NextLine().Forget();
-            }
         }
     }
 }

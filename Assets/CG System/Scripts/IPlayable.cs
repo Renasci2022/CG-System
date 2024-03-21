@@ -5,10 +5,13 @@ namespace CG
 {
     public interface IPlayable
     {
-        public UniTask Play(CancellationToken cancellationToken);
+        public UniTask Enter(CancellationToken cancellationToken);
 
         public UniTask Exit(CancellationToken cancellationToken);
+    }
 
+    public interface ISkipable
+    {
         public void Skip();
 
         public void Hide();

@@ -13,9 +13,13 @@ namespace CG
         private Image _image;   // 旁白框
         private Color _color;   // 没有隐藏时的颜色
 
-        public override async UniTask Play(CancellationToken token)
+        private bool _isEntering = false;   // 是否正在进入
+        private bool _isExiting = false;    // 是否正在退出
+
+        public override async UniTask Enter(CancellationToken token)
         {
             gameObject.SetActive(true);
+            _isEntering = true;
 
             while (true)
             {
@@ -30,13 +34,12 @@ namespace CG
                 }
                 if (_color.a >= 1f)
                 {
+                    _isEntering = false;
+
                     _color.a = 1f;
                     _image.color = CGPlayer.Instance.Hiding ? Color.clear : _color;
+
                     await StartTyping(token);
-                    if (token.IsCancellationRequested)
-                    {
-                        break;
-                    }
                     break;
                 }
 
@@ -49,6 +52,8 @@ namespace CG
 
         public override async UniTask Exit(CancellationToken token)
         {
+            _isExiting = true;
+
             while (true)
             {
                 if (token.IsCancellationRequested)
@@ -62,6 +67,7 @@ namespace CG
                 }
                 if (_color.a <= 0f)
                 {
+                    _isExiting = false;
                     _color.a = 0f;
                     _image.color = Color.clear;
                     _textMeshPro.color = Color.clear;
@@ -80,11 +86,21 @@ namespace CG
 
         public override void Skip()
         {
+            if (_isEntering)
+            {
+                _color.a = 1f;
+            }
+            if (_isExiting)
+            {
+                _color.a = 0f;
+            }
+
             SkipTyping();
         }
 
         public override void Hide()
         {
+            //FIXME: 在调用后播放的旁白不会隐藏
             _image.color = Color.clear;
             _textMeshPro.color = Color.clear;
         }
