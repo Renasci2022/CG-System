@@ -21,7 +21,7 @@ namespace CG
         public bool AutoPlay { get; private set; } = false;    // 是否自动播放
         public bool Paused => PlayState == PlayState.Paused;    // 是否暂停
         public bool Hiding => PlayState == PlayState.Hiding;    // 是否隐藏
-        public Language Language { get; private set; } = Language.English;    // 语言
+        public Language Language { get; private set; } = Language.Chinese;    // 语言
 
         private CGManager _manager;    // CG 管理器
 
