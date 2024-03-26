@@ -83,14 +83,6 @@ crashlytics-build.properties
 /[Aa]ssets/Plugins.meta
 /[Aa]ssets/TextMesh Pro.meta
 
-# Art files
-/[Aa]ssets/*/[Aa]rt/
-/[Aa]ssets/*/[Aa]rt.meta
-
-# Addressables
-/[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/
-/[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata.meta
-
 # I don't know what this is
 ProjectSettings/
 Packages/
