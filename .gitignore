@@ -82,7 +82,3 @@ crashlytics-build.properties
 /[Aa]ssets/TextMesh Pro/
 /[Aa]ssets/Plugins.meta
 /[Aa]ssets/TextMesh Pro.meta
-
-# I don't know what this is
-ProjectSettings/
-Packages/
